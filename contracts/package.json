@@ -1,7 +1,7 @@
 {
-    "name": "sqlite3",
+    "name": "voting",
     "version": "0.2.2",
-    "description": "Sqlite POC",
+    "description": "voting POC",
     "main": "index.ts",
     "license": "Apache-2.0",
     "scripts": {

@@ -14,8 +14,10 @@ from os import environ
 import logging
 import requests
 from flask import Flask, request
-import sqlite3
 import json
+import actions
+from dataService import create_candidates, list_all_candidates, top_candidates, voted_candidate
+from votingService import vote
 
 app = Flask(__name__)
 app.logger.setLevel(logging.INFO)
@@ -24,61 +26,38 @@ dispatcher_url = environ["HTTP_DISPATCHER_URL"]
 app.logger.info(f"HTTP dispatcher url is {dispatcher_url}")
 
 
-def create_table_book():
-    conn = sqlite3.connect('books.db')
-    conn.row_factory = dict_factory
-    cur = conn.cursor()
-
-    sql_query = "SELECT name FROM sqlite_master WHERE type='table';"
-    result = cur.execute(sql_query)
-    tables = result.fetchall()
-    if len(tables) == 0:
-        print("Books table does not exist")
-        query_create_table = "CREATE TABLE books(id integer NOT NULL, name text NOT NULL, quantity integer NOT NULL);"
-        cur.execute(query_create_table)
-    else:
-        print("Books table exists")
-
-
-@app.route("/advance", methods=["POST"])
+@app.route('/advance', methods=['POST'])
 def advance():
     body = request.get_json("metadata")
     print(f"Received advance request body {body}")
-    create_table_book()
+    create_candidates()
 
-    query = bytes.fromhex(body["payload"][2:]).decode()
-    print(query)
-    conn = sqlite3.connect('books.db')
-    conn.row_factory = dict_factory
+    payload = bytes.fromhex(body["payload"][2:]).decode()
+    print(payload)
+    payload = json.loads(payload)
 
-    try:
-        with conn:
-            cur = conn.cursor()
-            result = cur.execute(query)
-        if query.strip()[:6].upper() == "SELECT":
-            result = json.dumps(result.fetchall())
-        else:
-            result = "success"
-    except Exception as e:
-        result = "EXCEPTION: " + e.__str__()
-        print("NOTICE EXCEPTION" + e.__str__())
+    if payload['action'] == actions.LIST_ALL:
+        result = list_all_candidates()
+    elif payload['action'] == actions.TOP_CANDIDATES:
+        result = top_candidates(payload['quantity'])
+    elif payload['action'] == actions.VOTED_CANDIDATE:
+        result = voted_candidate(body['metadata']['address'])
+    elif payload['action'] == actions.VOTE:
+        result = vote(body['metadata']['address'], payload['candidate_id'])
+    else:
+        result = {}
 
-    add_notice(result)
+    print(result)
+    print("Result type: " + type(result).__name__)
+    add_notice(json.dumps(result))
     finish()
     return "", 202
 
 
-@app.route("/inspect/<payload>", methods=["GET"])
+@app.route('/inspect', methods=['GET'])
 def inspect(payload):
-    app.logger.info(f"Received inspect request payload {payload}")
+    print(f"Received inspect request payload {payload}")
     return {"reports": [{"payload": payload}]}, 200
-
-
-def dict_factory(cursor, row):
-    d = {}
-    for idx, col in enumerate(cursor.description):
-        d[col[0]] = row[idx]
-    return d
 
 
 def to_hex(value):

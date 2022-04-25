@@ -63,7 +63,7 @@ $ docker-compose down -v
 With the infrastructure in place, go to a separate terminal window and send an input as follows:
 
 ```shell
-$ docker exec cartesi_sqlite_poc_hardhat_1 npx hardhat --network localhost sqlite3:addInput --input "0x73656C656374202A2066726F6D20626F6F6B73"
+$ docker exec cartesi_voting_system_hardhat_1 npx hardhat --network localhost voting:addInput --input "0x7B22616374696F6E223A20224C4953545F414C4C227D"
 ```
 This input means `select * from books`
 

@@ -11,11 +11,14 @@
 # CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
 
-DAPP_FS=/opt/cartesi/sqlite-dapp-fs/sqlite-dapp
-DAPP_FS_BIN=/opt/cartesi/sqlite-dapp-fs/sqlite-dapp.ext2
+DAPP_FS=/opt/cartesi/voting-dapp-fs/voting-dapp
+DAPP_FS_BIN=/opt/cartesi/voting-dapp-fs/voting-dapp.ext2
 
 mkdir -p $DAPP_FS
-cp ./sqlite.py $DAPP_FS
+cp ./voting.py $DAPP_FS
+cp ./actions.py $DAPP_FS
+cp ./dataService.py $DAPP_FS
+cp ./votingService.py $DAPP_FS
 cp ./run.sh $DAPP_FS
 genext2fs -f -i 512 -b 5120 -d $DAPP_FS $DAPP_FS_BIN
 truncate -s %4096 $DAPP_FS_BIN

@@ -13,12 +13,12 @@
 DAPP_SERVER_MANAGER_TAG := 0.1.0
 DAPP_SERVER_MANAGER_IMG := cartesi/server-manager:$(DAPP_SERVER_MANAGER_TAG)
 
-CONTAINER_NAME := cartesi-sqlite-dapp
-CONTAINER_BASE := /opt/cartesi/sqlite
-CONTAINER_DAPP_FS_BIN := /opt/cartesi/sqlite-dapp-fs/sqlite-dapp.ext2
-CONTAINER_MACHINE_DIR := /opt/cartesi/sqlite-machine
+CONTAINER_NAME := cartesi-voting-dapp
+CONTAINER_BASE := /opt/cartesi/voting
+CONTAINER_DAPP_FS_BIN := /opt/cartesi/voting-dapp-fs/voting-dapp.ext2
+CONTAINER_MACHINE_DIR := /opt/cartesi/voting-machine
 
-DAPP_FS_BIN := sqlite-dapp.ext2
+DAPP_FS_BIN := voting-dapp.ext2
 BINARIES := rootfs.ext2 linux-5.5.19-ctsi-3.bin rom.bin
 MACHINE_DIR := machine
 
@@ -53,7 +53,7 @@ $(BINARIES) &:
 	@wget -q -nc -i dependencies -P .
 	@shasum -c shasumfile
 
-$(DAPP_FS_BIN): sqlite.py run.sh
+$(DAPP_FS_BIN): voting.py run.sh
 	@echo "Building echo-dapp filesystem..."
 	@if docker inspect $(CONTAINER_NAME) > /dev/null 2>&1; then \
 		docker rm -f $(CONTAINER_NAME) > /dev/null; \
