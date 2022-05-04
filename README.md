@@ -23,7 +23,7 @@ To run the sqlite poc example, clone the repository as follows:
 $ git clone git@github.com:Sotatek-ManhNguyen3/cartesi_sqlite_poc.git
 ```
 
-Then, build the back-end for the echo example:
+Then, build the back-end for the voting example:
 
 ```shell
 $ make machine
