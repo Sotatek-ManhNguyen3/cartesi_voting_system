@@ -13,51 +13,16 @@
 from os import environ
 import logging
 import requests
-from flask import Flask, request
 import json
-import actions
+from actions import *
 from dataService import create_candidates, list_all_candidates, top_candidates, voted_candidate
 from votingService import vote
 
-app = Flask(__name__)
-app.logger.setLevel(logging.INFO)
+logging.basicConfig(level="INFO")
+logger = logging.getLogger(__name__)
 
-dispatcher_url = environ["HTTP_DISPATCHER_URL"]
-app.logger.info(f"HTTP dispatcher url is {dispatcher_url}")
-
-
-@app.route('/advance', methods=['POST'])
-def advance():
-    body = request.get_json("metadata")
-    print(f"Received advance request body {body}")
-    create_candidates()
-
-    payload = bytes.fromhex(body["payload"][2:]).decode()
-    print(payload)
-    payload = json.loads(payload)
-
-    if payload['action'] == actions.LIST_ALL:
-        result = list_all_candidates()
-    elif payload['action'] == actions.TOP_CANDIDATES:
-        result = top_candidates(payload['quantity'])
-    elif payload['action'] == actions.VOTED_CANDIDATE:
-        result = voted_candidate(body['metadata']['address'])
-    elif payload['action'] == actions.VOTE:
-        result = vote(body['metadata']['address'], payload['candidate_id'])
-    else:
-        result = {}
-
-    print(result)
-    print("Result type: " + type(result).__name__)
-    add_notice(json.dumps(result))
-    finish()
-    return "", 202
-
-
-@app.route('/inspect', methods=['GET'])
-def inspect(payload):
-    print(f"Received inspect request payload {payload}")
-    return {"reports": [{"payload": payload}]}, 200
+rollup_server = environ["ROLLUP_HTTP_SERVER_URL"]
+logger.info(f"HTTP rollup_server url is {rollup_server}")
 
 
 def to_hex(value):
@@ -67,13 +32,73 @@ def to_hex(value):
 def add_notice(message):
     message = to_hex(message)
     print("Adding notice")
-    response = requests.post(dispatcher_url + "/notice", json={"payload": message})
+    response = requests.post(rollup_server + "/notice", json={"payload": message})
     print(f"Received notice status {response.status_code} body {response.json()}")
     return True
 
 
-def finish():
+def call_finish():
     print("Finishing")
-    response = requests.post(dispatcher_url + "/finish", json={"status": "accept"})
+    response = requests.post(rollup_server + "/finish", json={"status": "accept"})
     print(f"Received finish status {response.status_code}")
     return True
+
+
+def handle_advance(data):
+    body = data
+    print(f"Received advance request body {body}")
+    create_candidates()
+
+    payload = bytes.fromhex(body["payload"][2:]).decode()
+    print(payload)
+
+    if payload == '':
+        print('Default call')
+        add_notice(json.dumps({'message': 'Default request'}))
+        return "accept"
+
+    payload = json.loads(payload)
+
+    if payload['action'] == LIST_ALL:
+        result = list_all_candidates()
+    elif payload['action'] == TOP_CANDIDATES:
+        result = top_candidates(payload['quantity'])
+    elif payload['action'] == VOTED_CANDIDATE:
+        result = voted_candidate(body['metadata']['msg_sender'])
+    elif payload['action'] == VOTE:
+        result = vote(body['metadata']['msg_sender'], payload['candidate_id'])
+    else:
+        result = {}
+
+    print(result)
+    print("Result type: " + type(result).__name__)
+    add_notice(json.dumps(result))
+    return "accept"
+
+
+def handle_inspect(data):
+    logger.info(f"Received inspect request data {data}")
+    logger.info("Adding report")
+    report = {"payload": data["payload"]}
+    response = requests.post(rollup_server + "/report", json=report)
+    logger.info(f"Received report status {response.status_code}")
+    return "accept"
+
+
+handlers = {
+    "advance_state": handle_advance,
+    "inspect_state": handle_inspect,
+}
+
+
+finish = {"status": "accept"}
+while True:
+    logger.info("Sending finish")
+    response = requests.post(rollup_server + "/finish", json=finish)
+    logger.info(f"Received finish status {response.status_code}")
+    if response.status_code == 202:
+        logger.info("No pending rollup request, trying again")
+    else:
+        rollup_request = response.json()
+        handler = handlers[rollup_request["request_type"]]
+        finish["status"] = handler(rollup_request["data"])
