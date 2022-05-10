@@ -32,15 +32,15 @@ def to_hex(value):
 def add_notice(message):
     message = to_hex(message)
     print("Adding notice")
-    response = requests.post(rollup_server + "/notice", json={"payload": message})
-    print(f"Received notice status {response.status_code} body {response.json()}")
+    response_data = requests.post(rollup_server + "/notice", json={"payload": message})
+    print(f"Received notice status {response_data.status_code} body {response_data.json()}")
     return True
 
 
 def call_finish():
     print("Finishing")
-    response = requests.post(rollup_server + "/finish", json={"status": "accept"})
-    print(f"Received finish status {response.status_code}")
+    response_data = requests.post(rollup_server + "/finish", json={"status": "accept"})
+    print(f"Received finish status {response_data.status_code}")
     return True
 
 
@@ -80,8 +80,8 @@ def handle_inspect(data):
     logger.info(f"Received inspect request data {data}")
     logger.info("Adding report")
     report = {"payload": data["payload"]}
-    response = requests.post(rollup_server + "/report", json=report)
-    logger.info(f"Received report status {response.status_code}")
+    response_data = requests.post(rollup_server + "/report", json=report)
+    logger.info(f"Received report status {response_data.status_code}")
     return "accept"
 
 
