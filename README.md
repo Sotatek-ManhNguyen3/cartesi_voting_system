@@ -148,7 +148,7 @@ After the server successfully starts, it should print an output like the followi
 
 ```
 INFO:__main__:HTTP rollup_server url is http://127.0.0.1:5004
-INFO:__main__:Sending finish
+INFO:__main__:Sending finishsystem
 ```
 
 After that, you can interact with the application normally [as explained above](#interacting-with-the-application).

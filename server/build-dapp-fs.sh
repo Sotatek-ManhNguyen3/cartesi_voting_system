@@ -20,6 +20,7 @@ cp ./voting.py $DAPP_FS
 cp ./actions.py $DAPP_FS
 cp ./dataService.py $DAPP_FS
 cp ./votingService.py $DAPP_FS
-(cd $DAPP_FS; tar --sort=name --mtime="2022-01-01" --owner=0 --group=0 --numeric-owner -cf $DAPP_FS_TAR voting.py actions.py dataService.py votingService.py)
+cp -r ./lib $DAPP_FS
+(cd $DAPP_FS; tar --sort=name --mtime="2022-01-01" --owner=0 --group=0 --numeric-owner -cf $DAPP_FS_TAR voting.py actions.py dataService.py votingService.py lib)
 genext2fs -f -i 512 -b 5120 -a $DAPP_FS_TAR $DAPP_FS_BIN
 truncate -s %4096 $DAPP_FS_BIN

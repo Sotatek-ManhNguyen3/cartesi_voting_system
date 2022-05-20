@@ -14,9 +14,11 @@ from os import environ
 import logging
 import requests
 import json
-from actions import *
-from dataService import create_candidates, list_all_candidates, top_candidates, voted_candidate
-from votingService import vote
+import actions
+from dataService import create_base_tables, list_all_candidates, top_candidates, list_campaign
+from votingService import vote, create_new_campaign, get_voted_candidate, change_time_campaign, \
+    add_candidates_to_campaign, delete_candidate, voted_campaigns_of_user
+from lib.validator import validator, VALIDATE_RULES
 
 logging.basicConfig(level="INFO")
 logger = logging.getLogger(__name__)
@@ -47,7 +49,7 @@ def call_finish():
 def handle_advance(data):
     body = data
     print(f"Received advance request body {body}")
-    create_candidates()
+    create_base_tables()
 
     payload = bytes.fromhex(body["payload"][2:]).decode()
     print(payload)
@@ -59,14 +61,53 @@ def handle_advance(data):
 
     payload = json.loads(payload)
 
-    if payload['action'] == LIST_ALL:
-        result = list_all_candidates()
-    elif payload['action'] == TOP_CANDIDATES:
-        result = top_candidates(payload['quantity'])
-    elif payload['action'] == VOTED_CANDIDATE:
-        result = voted_candidate(body['metadata']['msg_sender'])
-    elif payload['action'] == VOTE:
-        result = vote(body['metadata']['msg_sender'], payload['candidate_id'])
+    # Validate data
+    if payload['action'] in VALIDATE_RULES.keys():
+        result = validator(payload, VALIDATE_RULES[payload['action']])
+        if 'error' in result.keys():
+            print(result)
+            add_notice(json.dumps(result))
+            return "accept"
+
+    if payload['action'] == actions.LIST_ALL:
+        result = list_all_candidates(payload['campaign_id'])
+    elif payload['action'] == actions.TOP_CANDIDATES:
+        quantity = payload['quantity'] if 'quantity' in payload.keys() else 10
+        result = top_candidates(payload['campaign_id'], quantity)
+    elif payload['action'] == actions.VOTED_CANDIDATE:
+        result = get_voted_candidate(body['metadata']['msg_sender'], payload['campaign_id'])
+    elif payload['action'] == actions.VOTE:
+        result = vote(
+            body['metadata']['msg_sender'],
+            payload['candidate_id'],
+            payload['campaign_id'],
+            body['metadata']['timestamp']
+        )
+    elif payload['action'] == actions.CREATE_CAMPAIGN:
+        result = create_new_campaign(body['metadata']['msg_sender'], payload)
+    elif payload['action'] == actions.LIST_CAMPAIGN:
+        result = list_campaign()
+    elif payload['action'] == actions.CHANGE_TIME_CAMPAIGN:
+        result = change_time_campaign(
+            body['metadata']['msg_sender'],
+            payload['campaign_id'],
+            payload['start_time'],
+            payload['end_time']
+        )
+    elif payload['action'] == actions.ADD_CANDIDATES:
+        result = add_candidates_to_campaign(
+            body['metadata']['msg_sender'],
+            payload['campaign_id'],
+            payload['candidates']
+        )
+    elif payload['action'] == actions.DELETE_CANDIDATE:
+        result = delete_candidate(
+            body['metadata']['msg_sender'],
+            payload['campaign_id'],
+            payload['candidate_id']
+        )
+    elif payload['action'] == actions.VOTED_CAMPAIGN:
+        result = voted_campaigns_of_user(body['metadata']['msg_sender'])
     else:
         result = {}
 
