@@ -1,10 +1,13 @@
 This is the voting system. User can vote for candidate listed in the system.
 
 ## How this system works
-User will be provided an un-changeable list of candidate, and they can vote for the candidate they interested in.
+This system provides everyone the ability to create their own voting campaign. 
+They can create the campaign with a list of candidates within it. 
+They can:
+- Modify the list of candidates 
+- Set start time and end time for the campaign. 
 
-Each user can only vote for 1 candidate, and they can not change their decision.
-The list candidate is fixed, it can not be changed.
+Anyone can join the campaign to vote, they can only vote for 1 candidate per campaign. Once they have voted, they can not change their selection.
 
 ## Building the environment
 
@@ -67,13 +70,7 @@ npx hardhat --network localhost voting:addInput --input "0x7B22616374696F6E223A2
 ```
 This input requests the system to return the list of candidate `{"action":"LIST_ALL"}`
 
-You can replace this request by another to retrieve the expected result. Such as:
-
-`{"action":"VOTED_CANDIDATE"}`
-
-`{"action":"TOP_CANDIDATES","quantity":10}`
-
-`{"action":"VOTE","candidate_id":"C10"}`
+You can replace this request by another to retrieve the expected result. The list available api is in [list available api](#available-api).
 
 The input will have been accepted when you receive a response similar to the following one:
 
@@ -167,4 +164,126 @@ Finally, to stop the containers, removing any associated volumes, execute:
 
 ```shell
 $ docker-compose -f docker-compose.yml -f docker-compose-host.yml down -v
+```
+
+## Available API
+
+List all candidate
+
+```shell
+{
+    "action": "LIST_ALL",
+    "campaign_id": 1
+}
+```
+
+Voted candidate
+
+```shell
+{
+    "action": "VOTED_CANDIDATE",
+    "campaign_id": 1
+}
+```
+
+List top candidates
+
+```shell
+{
+    "action": "TOP_CANDIDATES",
+    "quantity": 10 // Default 10,
+    "campaign_id": 1
+}
+```
+
+Vote
+
+```shell
+{
+    "action": "VOTE",
+    "candidate_id": 1,
+    "campaign_id": 1
+}
+```
+
+Create campaign
+
+```shell
+{
+    "action": "CREATE_CAMPAIGN",
+    "name": "C1",
+    "description": "Create a new conference campaign",
+    "start_time": "2022-07-08 12:11:00",
+    "end_time": "2023-07-08 12:11:00",
+    "candidates": [
+        {
+            "name": "C1",
+            "avatar": "avatar.png",
+            "brief_introduction": "Welcome to the C1 campaign"
+        },
+        {
+            "name": "C2",
+            "avatar": "avatar.png",
+            "brief_introduction": "Welcome to the C1 campaign"
+        }
+    ]
+}
+```
+
+List all campaigns
+
+```shell
+{
+    "action": "LIST_CAMPAIGN"
+}
+```
+
+Change start time and end time of campaign
+
+```shell
+{
+    "action": "CHANGE_TIME_CAMPAIGN",
+    "campaign_id": 1,
+    "start_time": "2022-01-08 20:20:20",
+    "end_time": "2022-10-09 09:09:09"
+}
+```
+
+Add candidates into existing campaign
+
+```shell
+{
+    "action": "ADD_CANDIDATES",
+    "campaign_id": 1,
+    "candidates": [
+        {
+            "name": "C1",
+            "avatar": "avatar.png",
+            "brief_introduction": "Welcome to the C1 campaign"
+        },
+        {
+            "name": "C2",
+            "avatar": "avatar.png",
+            "brief_introduction": "Welcome to the C1 campaign"
+        }
+    ]
+}
+```
+
+Delete candidate
+
+```shell
+{
+    "action": "DELETE_CANDIDATE",
+    "campaign_id": 1,
+    "candidate_id": 1
+}
+```
+
+Voted campaign
+
+```shell
+{
+    "action": "VOTED_CAMPAIGN"
+}
 ```
