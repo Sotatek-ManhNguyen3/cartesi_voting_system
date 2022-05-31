@@ -15,9 +15,9 @@ import logging
 import requests
 import json
 import actions
-from dataService import create_base_tables, list_all_candidates, top_candidates, list_campaign
 from votingService import vote, create_new_campaign, get_voted_candidate, change_time_campaign, \
-    add_candidates_to_campaign, delete_candidate, voted_campaigns_of_user
+    add_candidates_to_campaign, delete_candidate, voted_campaigns_of_user, initialize_tables, all_candidates, \
+    top_ranked_candidates, list_campaign
 from lib.validator import validator, VALIDATE_RULES
 
 logging.basicConfig(level="INFO")
@@ -49,7 +49,7 @@ def call_finish():
 def handle_advance(data):
     body = data
     print(f"Received advance request body {body}")
-    create_base_tables()
+    initialize_tables()
 
     payload = bytes.fromhex(body["payload"][2:]).decode()
     print(payload)
@@ -70,10 +70,10 @@ def handle_advance(data):
             return "accept"
 
     if payload['action'] == actions.LIST_ALL:
-        result = list_all_candidates(payload['campaign_id'])
+        result = all_candidates(payload['campaign_id'])
     elif payload['action'] == actions.TOP_CANDIDATES:
         quantity = payload['quantity'] if 'quantity' in payload.keys() else 10
-        result = top_candidates(payload['campaign_id'], quantity)
+        result = top_ranked_candidates(payload['campaign_id'], quantity)
     elif payload['action'] == actions.VOTED_CANDIDATE:
         result = get_voted_candidate(body['metadata']['msg_sender'], payload['campaign_id'])
     elif payload['action'] == actions.VOTE:

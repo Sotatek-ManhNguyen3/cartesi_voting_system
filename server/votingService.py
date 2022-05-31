@@ -124,3 +124,19 @@ def delete_candidate(deleter, campaign_id, candidate_id):
 
 def voted_campaigns_of_user(user):
     return voted_campaigns(user)
+
+
+def initialize_tables():
+    create_base_tables()
+
+
+def all_candidates(campaign_id):
+    return list_all_candidates(campaign_id)
+
+
+def top_ranked_candidates(campaign_id, quantity):
+    return top_candidates(campaign_id, quantity)
+
+
+def all_campaigns():
+    return list_campaign()
