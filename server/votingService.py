@@ -1,4 +1,5 @@
-from dataService import get_candidate_by_id, voted_candidate, vote_candidate, increase_votes
+from dataService import get_candidate_by_id, voted_candidate, vote_candidate,\
+    increase_votes, create_candidates, list_all_candidates, top_candidates
 
 
 def vote(user, candidate_id):
@@ -15,3 +16,19 @@ def vote(user, candidate_id):
         return result
 
     return increase_votes(candidate_id)
+
+
+def initialize_candidates():
+    create_candidates()
+
+
+def all_candidates():
+    return list_all_candidates()
+
+
+def your_vote(user):
+    return voted_candidate(user)
+
+
+def highest_ranked_candidates(quantity):
+    return top_candidates(quantity)

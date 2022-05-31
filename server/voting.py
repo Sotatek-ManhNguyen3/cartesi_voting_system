@@ -15,8 +15,7 @@ import logging
 import requests
 import json
 from actions import *
-from dataService import create_candidates, list_all_candidates, top_candidates, voted_candidate
-from votingService import vote
+from votingService import *
 
 logging.basicConfig(level="INFO")
 logger = logging.getLogger(__name__)
@@ -47,7 +46,7 @@ def call_finish():
 def handle_advance(data):
     body = data
     print(f"Received advance request body {body}")
-    create_candidates()
+    initialize_candidates()
 
     payload = bytes.fromhex(body["payload"][2:]).decode()
     print(payload)
@@ -60,11 +59,11 @@ def handle_advance(data):
     payload = json.loads(payload)
 
     if payload['action'] == LIST_ALL:
-        result = list_all_candidates()
+        result = all_candidates()
     elif payload['action'] == TOP_CANDIDATES:
         result = top_candidates(payload['quantity'])
     elif payload['action'] == VOTED_CANDIDATE:
-        result = voted_candidate(body['metadata']['msg_sender'])
+        result = your_vote(body['metadata']['msg_sender'])
     elif payload['action'] == VOTE:
         result = vote(body['metadata']['msg_sender'], payload['candidate_id'])
     else:
