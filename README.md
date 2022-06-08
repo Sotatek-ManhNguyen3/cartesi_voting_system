@@ -170,6 +170,9 @@ $ docker-compose -f docker-compose.yml -f docker-compose-host.yml down -v
 
 List all candidate
 
+View all the candidate of the campaign.<br/>
+Return: List candidates.
+
 ```shell
 {
     "action": "LIST_ALL",
@@ -177,7 +180,10 @@ List all candidate
 }
 ```
 
-Voted candidate
+Voted candidate: 
+
+View the candidate you voted for in the campaign.<br/>
+Return: Voted candidate or error if you haven't voted yet.
 
 ```shell
 {
@@ -186,7 +192,10 @@ Voted candidate
 }
 ```
 
-List top candidates
+List top candidates: 
+
+Get top ranking candidates of the campaign.<br/>
+Return: List highest ranking candidates.
 
 ```shell
 {
@@ -196,7 +205,10 @@ List top candidates
 }
 ```
 
-Vote
+Vote: 
+
+Vote for a candidate.<br/>
+Return: Message success or fail.
 
 ```shell
 {
@@ -206,7 +218,10 @@ Vote
 }
 ```
 
-Create campaign
+Create campaign: 
+
+Create your own campaign.<br/>
+Return: Campaign detail or error message
 
 ```shell
 {
@@ -232,6 +247,9 @@ Create campaign
 
 List all campaigns
 
+View all the campaigns that exists in the system.<br/>
+Return: List of campaign.
+
 ```shell
 {
     "action": "LIST_CAMPAIGN"
@@ -239,6 +257,9 @@ List all campaigns
 ```
 
 Change start time and end time of campaign
+
+Change the start time and end time of a campaign. <br/>
+Return: Success or error message
 
 ```shell
 {
@@ -250,6 +271,9 @@ Change start time and end time of campaign
 ```
 
 Add candidates into existing campaign
+
+You can add more candidate to a specified campaign (if you are the owner of that campaign). <br/>
+Return: Success or error message
 
 ```shell
 {
@@ -272,6 +296,9 @@ Add candidates into existing campaign
 
 Delete candidate
 
+You can remove a candidate from the campaign (If you are the owner of that campaign).<br/>
+Return: Success or fail message.
+
 ```shell
 {
     "action": "DELETE_CANDIDATE",
@@ -281,6 +308,9 @@ Delete candidate
 ```
 
 Voted campaign
+
+View the campaign you have voted. <br/>
+Return: List of campaign.
 
 ```shell
 {
