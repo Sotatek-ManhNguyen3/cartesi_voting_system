@@ -67,13 +67,23 @@ npx hardhat --network localhost voting:addInput --input "0x7B22616374696F6E223A2
 ```
 This input requests the system to return the list of candidate `{"action":"LIST_ALL"}`
 
-You can replace this request by another to retrieve the expected result. Such as:
+You can replace this request by another to retrieve the expected result. Here are the docs for each query:
+
+If you want to get all the candidates, you use this query:
+
+`{"action":"LIST_ALL"}`
+
+If you want to vote for a candidate, you use this query (The candidate_id can be found when you list all the existing candidates):
+
+`{"action":"VOTE","candidate_id":"C10"}`
+
+If you want to view what candidate you had voted, you use this query:
 
 `{"action":"VOTED_CANDIDATE"}`
 
-`{"action":"TOP_CANDIDATES","quantity":10}`
+If you want to view the highest ranking candidates, you can use this query (with quantity is the number of candidates you want to see):
 
-`{"action":"VOTE","candidate_id":"C10"}`
+`{"action":"TOP_CANDIDATES","quantity":10}`
 
 The input will have been accepted when you receive a response similar to the following one:
 
