@@ -2,6 +2,21 @@ import datetime
 import sqlite3
 
 
+def update_deposit_amount(user, amount):
+    query = 'update deposit set amount = amount + ? where user = ?'
+    return update_data(query, (amount, user))
+
+
+def create_deposit_info(user, amount):
+    query = 'insert into deposit (user, amount) values (?, ?)'
+    return insert_data(query, (user, amount))
+
+
+def get_deposit_info(user):
+    query = 'select * from deposit where user = ?'
+    return select_data(query, (user,))
+
+
 def voted_campaigns(user):
     query = 'select * from voting v ' \
             'inner join campaigns c on v.campaign_id = c.id ' \
@@ -184,6 +199,13 @@ def create_base_tables():
                              "FOREIGN KEY (candidate_id) REFERENCES candidates (id)," \
                              "FOREIGN KEY (campaign_id) REFERENCES campaigns (id))"
         cur.execute(query_voting_table)
+
+        query_deposit_table = "CREATE TABLE deposit(" \
+                              "id INTEGER PRIMARY KEY AUTOINCREMENT," \
+                              "user TEXT NOT NULL," \
+                              "amount INTEGER NOT NULL)"
+
+        cur.execute(query_deposit_table)
         conn.commit()
         conn.close()
     else:

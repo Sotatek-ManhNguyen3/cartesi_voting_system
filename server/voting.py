@@ -17,8 +17,9 @@ import json
 import actions
 from votingService import vote, create_new_campaign, get_voted_candidate, change_time_campaign, \
     add_candidates_to_campaign, delete_candidate, voted_campaigns_of_user, initialize_tables, all_candidates, \
-    top_ranked_candidates, list_campaign
+    top_ranked_candidates, list_campaign, to_hex, add_deposit_user
 from lib.validator import validator, VALIDATE_RULES
+from eth_abi import decode_abi
 
 logging.basicConfig(level="INFO")
 logger = logging.getLogger(__name__)
@@ -26,9 +27,10 @@ logger = logging.getLogger(__name__)
 rollup_server = environ["ROLLUP_HTTP_SERVER_URL"]
 logger.info(f"HTTP rollup_server url is {rollup_server}")
 
-
-def to_hex(value):
-    return "0x" + value.encode().hex()
+# Default header for ERC-20 transfers coming from the Portal, which corresponds
+# to the Keccak256-encoded string "ERC20_Transfer", as defined at
+# https://github.com/cartesi/rollups/blob/main/onchain/rollups/contracts/facets/ERC20PortalFacet.sol.
+ERC20_TRANSFER_HEADER = b'Y\xda*\x98N\x16Z\xe4H|\x99\xe5\xd1\xdc\xa7\xe0L\x8a\x990\x1b\xe6\xbc\t)2\xcb]\x7f\x03Cx'
 
 
 def add_notice(message):
@@ -42,6 +44,13 @@ def add_notice(message):
 def call_finish():
     print("Finishing")
     response_data = requests.post(rollup_server + "/finish", json={"status": "accept"})
+    print(f"Received finish status {response_data.status_code}")
+    return True
+
+
+def add_report(payload):
+    print("Adding report")
+    response_data = requests.post(rollup_server + "/report", json={"status": "accept", "payload": payload})
     print(f"Received finish status {response_data.status_code}")
     return True
 
@@ -126,13 +135,53 @@ def handle_inspect(data):
     return "accept"
 
 
+def handle_deposit_money(payload, sender):
+    print(f"Received deposit request {payload}")
+
+    try:
+        # Check whether an input was sent by the Portal,
+        # which is where all deposits must come from
+        if sender != rollup_address:
+            return reject_input(f"Input does not come from the Portal")
+
+        # Attempt to decode input as an ABI-encoded ERC20 deposit
+        binary = bytes.fromhex(payload[2:])
+        try:
+            decoded = decode_abi(['bytes32', 'address', 'address', 'uint256', 'bytes'], binary)
+        except Exception as e:
+            msg = "Payload does not conform to ERC20 deposit ABI"
+            print(f"{msg}")
+            return reject_input(msg, payload)
+
+        # Check if the header matches the Keccak256-encoded string "ERC20_Transfer"
+        input_header = decoded[0]
+        if input_header != ERC20_TRANSFER_HEADER:
+            return reject_input(f"Input header is not from an ERC20 transfer", payload)
+
+        notice = f"Deposit received from: {decoded[1]}; ERC-20: {decoded[2]}; Amount: {decoded[3]}"
+        print(f"Adding notice: {notice}")
+        add_deposit_user(decoded[1], decoded[3])
+        add_notice(notice)
+        return "accept"
+    except Exception as e:
+        return reject_input(f"Error processing data{payload}")
+
+
+def reject_input(msg, payload):
+    print(f"Reject input {msg}")
+    add_report(payload)
+    return "reject"
+
+
 handlers = {
     "advance_state": handle_advance,
     "inspect_state": handle_inspect,
 }
 
-
 finish = {"status": "accept"}
+rollup_address = None
+
+
 while True:
     logger.info("Sending finish")
     response = requests.post(rollup_server + "/finish", json=finish)
@@ -141,5 +190,10 @@ while True:
         logger.info("No pending rollup request, trying again")
     else:
         rollup_request = response.json()
-        handler = handlers[rollup_request["request_type"]]
-        finish["status"] = handler(rollup_request["data"])
+        metadata = rollup_request["data"]["metadata"]
+        if metadata["epoch_index"] == 0 and metadata["input_index"] == 0:
+            rollup_address = metadata["msg_sender"]
+            logger.info(f"Captured rollup address: {rollup_address}")
+        else:
+            handler = handlers[rollup_request["request_type"]]
+            finish["status"] = handler(rollup_request["data"])

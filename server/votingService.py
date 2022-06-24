@@ -2,6 +2,17 @@ from dataService import *
 from lib.helpers import get_date_time_from_string
 
 
+def add_deposit_user(user, amount):
+    deposit_info = get_deposit_info(user)
+
+    if len(deposit_info) == 0:
+        create_deposit_info(user, amount)
+    else:
+        update_deposit_amount(user, amount)
+
+    return True
+
+
 def vote(user, candidate_id, campaign_id, timestamp):
     # Validate campaign and valid time to vote
     campaign = get_campaign(campaign_id)
@@ -140,3 +151,7 @@ def top_ranked_candidates(campaign_id, quantity):
 
 def all_campaigns():
     return list_campaign()
+
+
+def to_hex(value):
+    return "0x" + value.encode().hex()
