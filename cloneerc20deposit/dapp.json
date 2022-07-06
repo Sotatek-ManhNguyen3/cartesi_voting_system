@@ -1,0 +1,6 @@
+{
+  "fs": {
+    "files": [".env", "voting.py", "entrypoint.sh"],
+    "size": 131072
+  }
+}

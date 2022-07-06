@@ -1,5 +1,5 @@
 {
   "fs": {
-    "files": ["template.py", "entrypoint.sh"]
+    "files": ["erc20deposit.py", "entrypoint.sh"]
   }
 }
