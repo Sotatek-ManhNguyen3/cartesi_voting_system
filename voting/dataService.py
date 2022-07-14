@@ -40,9 +40,41 @@ def update_time_campaign(campaign_id, start_time, end_time):
     return update_data(query, (start_time, end_time, campaign_id))
 
 
-def list_campaign():
-    query = 'select * from campaigns'
-    return select_data(query, ())
+def list_campaign(page, limit):
+    query = 'select c.*, stat3.name winning_candidate_name, stat3.votes votes_of_candidate\
+                from campaigns c\
+                left join (select *\
+                from candidates c3\
+                where id in (select max(id)\
+                from candidates c2\
+                join\
+                (select max(votes) max_vote, campaign_id\
+                from candidates\
+                    group by campaign_id) stat\
+                on c2.campaign_id = stat.campaign_id and c2.votes = stat.max_vote\
+                group by c2.campaign_id)) stat3\
+                on c.id = stat3.campaign_id\
+                limit ? offset ?'
+    query_total = 'select count(*) total\
+                from campaigns c\
+                left join (select *\
+                from candidates c3\
+                where id in (select max(id)\
+                from candidates c2\
+                join\
+                (select max(votes) max_vote, campaign_id\
+                from candidates\
+                    group by campaign_id) stat\
+                on c2.campaign_id = stat.campaign_id and c2.votes = stat.max_vote\
+                group by c2.campaign_id)) stat3\
+                on c.id = stat3.campaign_id'
+    result = {
+        "data": select_data(query, (limit, (page - 1) * limit)),
+        "page": page,
+        "limit": limit,
+        "total": select_data(query_total, ())[0]['total']
+    }
+    return result
 
 
 def get_campaign(campaign_id):

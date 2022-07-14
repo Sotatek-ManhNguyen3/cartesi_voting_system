@@ -153,8 +153,8 @@ def top_ranked_candidates(campaign_id, quantity):
     return top_candidates(campaign_id, quantity)
 
 
-def all_campaigns():
-    return list_campaign()
+def all_campaigns(page, limit):
+    return list_campaign(page, limit)
 
 
 def to_hex(value):

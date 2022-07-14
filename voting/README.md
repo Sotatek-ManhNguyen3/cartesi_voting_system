@@ -51,12 +51,12 @@ The response should be something like bellow.
 
 ```shell
 [
-  {
-    epoch: '0',
-    input: '1',
-    notice: '0',
-    payload: '[{"id": 1, "creator": "0x8B39e23A121bAc9221698cD22ae7A6a80D64b1DC", "name": "Which is the most favorite coin?", "description": "This is the default campaign of the system.", "start_time": "2000-01-01 00:00:00", "end_time": "2099-01-01 00:00:00"}]'
-  }
+    {
+      epoch: '0',
+      input: '5',
+      notice: '0',
+      payload: '{"data": [{"id": 1, "creator": "0x8B39e23A121bAc9221698cD22ae7A6a80D64b1DC", "name": "Which is the most favorite coin?", "description": "This is the default campaign of the system.", "start_time": "2000-01-01 00:00:00", "end_time": "2099-01-01 00:00:00", "winning_candidate_name": "HEX", "votes_of_candidate": 10}], "page": 1, "limit": 10, "total": 1}'
+    }
 ]
 ```
 

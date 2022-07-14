@@ -17,7 +17,7 @@ import json
 import actions
 from votingService import vote, create_new_campaign, get_voted_candidate, change_time_campaign, \
     add_candidates_to_campaign, delete_candidate, voted_campaigns_of_user, initialize_tables, all_candidates, \
-    top_ranked_candidates, list_campaign, to_hex, add_deposit_user
+    top_ranked_candidates, all_campaigns, to_hex, add_deposit_user
 from lib.validator import validator, VALIDATE_RULES
 from eth_abi import decode_abi
 
@@ -106,7 +106,7 @@ def handle_advance(data):
     elif payload['action'] == actions.CREATE_CAMPAIGN:
         result = create_new_campaign(body['metadata']['msg_sender'], payload)
     elif payload['action'] == actions.LIST_CAMPAIGN:
-        result = list_campaign()
+        result = all_campaigns(payload['page'], payload['limit'])
     elif payload['action'] == actions.CHANGE_TIME_CAMPAIGN:
         result = change_time_campaign(
             body['metadata']['msg_sender'],
