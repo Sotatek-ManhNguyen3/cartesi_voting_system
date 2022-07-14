@@ -67,7 +67,6 @@ def create_new_campaign(creator, payload):
             candidates.append([
                 candidate['name'],
                 campaign['id'],
-                candidate['avatar'] if 'avatar' in candidate.keys() else '',
                 candidate['brief_introduction'] if 'brief_introduction' in candidate.keys() else '',
             ])
 

@@ -51,7 +51,7 @@ def get_campaign(campaign_id):
 
 
 def add_candidates(list_candidate):
-    query = 'insert into candidates (name, campaign_id, avatar, brief_introduction) values (?, ?, ?, ?)'
+    query = 'insert into candidates (name, campaign_id, brief_introduction) values (?, ?, ?)'
     return insert_multiple_data(query, list_candidate)
 
 
@@ -149,6 +149,7 @@ def insert_multiple_data(query, data):
         with conn:
             cur = conn.cursor()
             cur.executemany(query, data)
+            print('success')
             return {'message': 'Success'}
     except Exception as e:
         result = "EXCEPTION: " + e.__str__()
@@ -185,7 +186,6 @@ def create_base_tables():
                                  "name TEXT NOT NULL," \
                                  "campaign_id INTEGER NOT NULL," \
                                  "votes INTEGER NOT NULL DEFAULT 0," \
-                                 "avatar TEXT," \
                                  "brief_introduction TEXT," \
                                  "FOREIGN KEY (campaign_id) REFERENCES campaigns (id))"
         cur.execute(query_candidates_table)
@@ -206,6 +206,90 @@ def create_base_tables():
                               "amount INTEGER NOT NULL)"
 
         cur.execute(query_deposit_table)
+
+        campaign = create_campaign(
+            "0x8B39e23A121bAc9221698cD22ae7A6a80D64b1DC",
+            'This is the default campaign of the system.',
+            "2000-01-01 00:00:00",
+            "2099-01-01 00:00:00",
+            "Which is the most favorite coin?"
+        )
+
+        query = []
+        candidates = [
+            {
+                "name": "BTC",
+                "brief_introduction": "Bitcoin is a decentralized digital currency that can be transferred on the "
+                                      "peer-to-peer bitcoin network. Bitcoin transactions are verified by network "
+                                      "nodes through cryptography and recorded in a public distributed ledger called "
+                                      "a blockchain. "
+            },
+            {
+                "name": "ETH",
+                "brief_introduction": "Ethereum is a decentralized, open-source blockchain with smart contract "
+                                      "functionality. Ether is the native cryptocurrency of the platform. Among "
+                                      "cryptocurrencies, Ether is second only to Bitcoin in market capitalization. "
+                                      "Ethereum was conceived in 2013 by programmer Vitalik Buterin. "
+            },
+            {
+                "name": "USDT",
+                "brief_introduction": "Tether, is an asset-backed cryptocurrency stablecoin. It was launched by the "
+                                      "company Tether Limited Inc. in 2014. Tether Limited is owned by the Hong "
+                                      "Kong-based company iFinex Inc., which also owns the Bitfinex cryptocurrency "
+                                      "exchange. "
+            },
+            {
+                "name": "BNB",
+                "brief_introduction": "Binance Coin (BNB) is a cryptocurrency that can be used to trade and pay fees "
+                                      "on the Binance cryptocurrency exchange. The Binance Exchange is the largest "
+                                      "cryptocurrency exchange in the world as of January 2018, facilitating more "
+                                      "than 1.4 million transactions per second. "
+            },
+            {
+                "name": "CTSI",
+                "brief_introduction": "CTSI is a utility token that powers the Cartesi network, which aims to solve "
+                                      "blockchain scalability and high fees using technologies such as Optimistic "
+                                      "Rollups and side-chains. CTSI can be used for staking and fees for processing "
+                                      "data on the network. "
+            },
+            {
+                "name": "DOGE",
+                "brief_introduction": "Dogecoin is a cryptocurrency created by software engineers Billy Markus and "
+                                      "Jackson Palmer, who decided to create a payment system as a joke, making fun "
+                                      "of the wild speculation in cryptocurrencies at the time. It is considered both "
+                                      "the first meme coin, and, more specifically, the first dog coin. "
+            },
+            {
+                "name": "SOL",
+                "brief_introduction": "A sol is a type of colloid in which solid particles are suspended in a liquid. "
+                                      "The particles in a sol are very small. The colloidal solution displays the "
+                                      "Tyndall effect and is stable. Sols may be prepared via condensation or "
+                                      "dispersion. "
+            },
+            {
+                "name": "DOT",
+                "brief_introduction": "Polkadot is a protocol that connects blockchains — allowing value and data to "
+                                      "be sent across previously incompatible networks (Bitcoin and Ethereum, "
+                                      "for example). It's also designed to be fast and scalable. The DOT token is "
+                                      "used for staking and governance; it can be bought or sold on Coinbase and "
+                                      "other exchanges. "
+            },
+            {
+                "name": "HEX",
+                "brief_introduction": "Hex (HEX) is an Ethereum-based token that is marketed as the first blockchain "
+                                      "certificate of deposit. Richard Heart launched Hex in 2019, utilizing an "
+                                      "aggressive marketing campaign to build its userbase. Users stake HEX tokens, "
+                                      "promising to leave them untouched for specified amounts of time. "
+            }
+        ]
+        for candidate in candidates:
+            query.append([
+                candidate['name'],
+                campaign['id'],
+                candidate['brief_introduction'] if 'brief_introduction' in candidate.keys() else '',
+            ])
+
+        add_candidates(query)
         conn.commit()
         conn.close()
     else:

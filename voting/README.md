@@ -11,7 +11,7 @@ Anyone can join the campaign to vote, they can only vote for 1 candidate per cam
 ## Installing extra dependencies
 
 The DApp requires some modules, which are not available in the default Python installation that comes with the Cartesi Machine.
-In order to install these modules, this DApp's build configuration has been adapted following the same process already explained in the [Calculator documentation](../calculator/README.md#installing-extra-dependencies).
+In order to install these modules, this DApp's build configuration has been adapted following the same process already explained in the [Calculator documentation](https://github.com/cartesi/rollups-examples/blob/main/calculator/README.md#installing-extra-dependencies).
 
 In practice, the [build procedure](../README.md#building) remains the same one described for all the DApps.
 
