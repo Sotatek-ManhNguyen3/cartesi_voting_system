@@ -40,7 +40,18 @@ def update_time_campaign(campaign_id, start_time, end_time):
     return update_data(query, (start_time, end_time, campaign_id))
 
 
-def list_campaign(page, limit):
+def list_campaign(page, limit, condition, user):
+    additional_condition = ""
+    time = datetime.datetime.now()
+
+    if condition == 'ON_GOING':
+        additional_condition = ' where start_time <= "' + str(time) + '" and end_time >= "' + str(time) + '" '
+    elif condition == 'FINISHED':
+        additional_condition = ' where end_time <= "' + str(time) + '" '
+    else:
+        # Case voted
+        additional_condition = ' where id in (select campaign_id from voting where user="' + user + '") '
+
     query = 'select c.*, stat3.name winning_candidate_name, stat3.votes votes_of_candidate\
                 from campaigns c\
                 left join (select *\
@@ -54,7 +65,7 @@ def list_campaign(page, limit):
                 on c2.campaign_id = stat.campaign_id and c2.votes = stat.max_vote\
                 group by c2.campaign_id)) stat3\
                 on c.id = stat3.campaign_id\
-                limit ? offset ?'
+                ' + additional_condition + 'limit ? offset ?'
     query_total = 'select count(*) total\
                 from campaigns c\
                 left join (select *\
@@ -67,7 +78,7 @@ def list_campaign(page, limit):
                     group by campaign_id) stat\
                 on c2.campaign_id = stat.campaign_id and c2.votes = stat.max_vote\
                 group by c2.campaign_id)) stat3\
-                on c.id = stat3.campaign_id'
+                on c.id = stat3.campaign_id' + additional_condition
     result = {
         "data": select_data(query, (limit, (page - 1) * limit)),
         "page": page,

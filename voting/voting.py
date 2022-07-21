@@ -106,7 +106,7 @@ def handle_advance(data):
     elif payload['action'] == actions.CREATE_CAMPAIGN:
         result = create_new_campaign(body['metadata']['msg_sender'], payload)
     elif payload['action'] == actions.LIST_CAMPAIGN:
-        result = all_campaigns(payload['page'], payload['limit'])
+        result = all_campaigns(payload['page'], payload['limit'], payload['type'], body['metadata']['msg_sender'])
     elif payload['action'] == actions.CHANGE_TIME_CAMPAIGN:
         result = change_time_campaign(
             body['metadata']['msg_sender'],
