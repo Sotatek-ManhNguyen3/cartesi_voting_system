@@ -16,7 +16,7 @@ import requests
 import json
 import actions
 from votingService import vote, create_new_campaign, get_voted_candidate, change_time_campaign, \
-    add_candidates_to_campaign, delete_candidate, voted_campaigns_of_user, initialize_tables, all_candidates, \
+    add_candidates_to_campaign, delete_candidate, voted_campaigns_of_user, initialize_tables, get_campaign_detail, \
     top_ranked_candidates, all_campaigns, to_hex, add_deposit_user
 from lib.validator import validator, VALIDATE_RULES
 from eth_abi import decode_abi
@@ -89,8 +89,8 @@ def handle_advance(data):
             add_notice(json.dumps(result))
             return "accept"
 
-    if payload['action'] == actions.LIST_ALL:
-        result = all_candidates(payload['campaign_id'])
+    if payload['action'] == actions.CAMPAIGN_DETAIL:
+        result = get_campaign_detail(payload['campaign_id'])
     elif payload['action'] == actions.TOP_CANDIDATES:
         quantity = payload['quantity'] if 'quantity' in payload.keys() else 10
         result = top_ranked_candidates(payload['campaign_id'], quantity)

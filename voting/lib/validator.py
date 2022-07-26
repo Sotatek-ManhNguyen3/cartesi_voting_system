@@ -31,7 +31,7 @@ def validator(variable, rules):
 
 
 VALIDATE_RULES = {
-    actions.LIST_ALL: {
+    actions.CAMPAIGN_DETAIL: {
         'campaign_id': {
             'type': 'int',
             'nullable': False
