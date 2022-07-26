@@ -145,8 +145,11 @@ def initialize_tables():
     create_base_tables()
 
 
-def all_candidates(campaign_id):
-    return list_all_candidates(campaign_id)
+def get_campaign_detail(campaign_id):
+    return {
+        'candidates': list_all_candidates(campaign_id),
+        'campaign': get_campaign(campaign_id),
+    }
 
 
 def top_ranked_candidates(campaign_id, quantity):
