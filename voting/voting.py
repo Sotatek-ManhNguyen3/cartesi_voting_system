@@ -201,10 +201,12 @@ while True:
         logger.info("No pending rollup request, trying again")
     else:
         rollup_request = response.json()
-        metadata = rollup_request["data"]["metadata"]
-        if metadata["epoch_index"] == 0 and metadata["input_index"] == 0:
-            rollup_address = metadata["msg_sender"]
-            logger.info(f"Captured rollup address: {rollup_address}")
-        else:
+        print(rollup_request)
+        if rollup_request["request_type"] == 'inspect_state':
             handler = handlers[rollup_request["request_type"]]
             finish["status"] = handler(rollup_request["data"])
+        else:
+            metadata = rollup_request["data"]["metadata"]
+            if metadata["epoch_index"] == 0 and metadata["input_index"] == 0:
+                rollup_address = metadata["msg_sender"]
+                logger.info(f"Captured rollup address: {rollup_address}")
