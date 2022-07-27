@@ -55,31 +55,27 @@ def add_report(payload):
     return True
 
 
-def handle_advance(data):
-    body = data
-    print(f"Received advance request body {body}")
+def action_proxy(data):
     initialize_tables()
-    payload = ''
-
     try:
-        payload = bytes.fromhex(body["payload"][2:]).decode()
+        payload = bytes.fromhex(data["payload"][2:]).decode()
         print(payload)
     except Exception as e:
-        handle_deposit_money(body["payload"], body['metadata']['msg_sender'])
+        handle_deposit_money(data["payload"], data['metadata']['msg_sender'])
         return 'accept'
+
+    user = data['metadata']['msg_sender']
+    timestamp = data['metadata']['timestamp']
 
     if payload == '':
         print('Default call')
-        add_notice(json.dumps({'message': 'Default request'}))
-        return "accept"
+        return "Default request"
 
     try:
         payload = json.loads(payload)
     except Exception as e:
-        result = 'Invalid input'
-        print(result)
-        add_notice(result)
-        return "reject"
+        print('Invalid input')
+        return "Invalid input"
 
     # Validate data
     if payload['action'] in VALIDATE_RULES.keys():
@@ -87,7 +83,11 @@ def handle_advance(data):
         if 'error' in result.keys():
             print(result)
             add_notice(json.dumps(result))
-            return "accept"
+            return "reject"
+    else:
+        result = 'Invalid input'
+        add_notice(json.dumps(result))
+        return "reject"
 
     if payload['action'] == actions.CAMPAIGN_DETAIL:
         result = get_campaign_detail(payload['campaign_id'])
@@ -95,54 +95,56 @@ def handle_advance(data):
         quantity = payload['quantity'] if 'quantity' in payload.keys() else 10
         result = top_ranked_candidates(payload['campaign_id'], quantity)
     elif payload['action'] == actions.VOTED_CANDIDATE:
-        result = get_voted_candidate(body['metadata']['msg_sender'], payload['campaign_id'])
+        result = get_voted_candidate(user, payload['campaign_id'])
     elif payload['action'] == actions.VOTE:
         result = vote(
-            body['metadata']['msg_sender'],
+            user,
             payload['candidate_id'],
             payload['campaign_id'],
-            body['metadata']['timestamp']
+            timestamp
         )
     elif payload['action'] == actions.CREATE_CAMPAIGN:
-        result = create_new_campaign(body['metadata']['msg_sender'], payload)
+        result = create_new_campaign(user, payload)
     elif payload['action'] == actions.LIST_CAMPAIGN:
-        result = all_campaigns(payload['page'], payload['limit'], payload['type'], body['metadata']['msg_sender'])
+        result = all_campaigns(payload['page'], payload['limit'], payload['type'], user)
     elif payload['action'] == actions.CHANGE_TIME_CAMPAIGN:
         result = change_time_campaign(
-            body['metadata']['msg_sender'],
+            user,
             payload['campaign_id'],
             payload['start_time'],
             payload['end_time']
         )
     elif payload['action'] == actions.ADD_CANDIDATES:
         result = add_candidates_to_campaign(
-            body['metadata']['msg_sender'],
+            user,
             payload['campaign_id'],
             payload['candidates']
         )
     elif payload['action'] == actions.DELETE_CANDIDATE:
         result = delete_candidate(
-            body['metadata']['msg_sender'],
+            user,
             payload['campaign_id'],
             payload['candidate_id']
         )
     elif payload['action'] == actions.VOTED_CAMPAIGN:
-        result = voted_campaigns_of_user(body['metadata']['msg_sender'])
+        result = voted_campaigns_of_user(user)
     else:
         result = {}
 
     print(result)
     print("Result type: " + type(result).__name__)
     add_notice(json.dumps(result))
+
+
+def handle_advance(data):
+    print(f"Received advance request body {data}")
+    action_proxy(data)
     return "accept"
 
 
 def handle_inspect(data):
     logger.info(f"Received inspect request data {data}")
-    logger.info("Adding report")
-    report = {"payload": data["payload"]}
-    response_data = requests.post(rollup_server + "/report", json=report)
-    logger.info(f"Received report status {response_data.status_code}")
+    action_proxy(data)
     return "accept"
 
 
@@ -192,7 +194,6 @@ handlers = {
 finish = {"status": "accept"}
 rollup_address = None
 
-
 while True:
     logger.info("Sending finish")
     response = requests.post(rollup_server + "/finish", json=finish)
@@ -210,3 +211,6 @@ while True:
             if metadata["epoch_index"] == 0 and metadata["input_index"] == 0:
                 rollup_address = metadata["msg_sender"]
                 logger.info(f"Captured rollup address: {rollup_address}")
+            else:
+                handler = handlers[rollup_request["request_type"]]
+                finish["status"] = handler(rollup_request["data"])
