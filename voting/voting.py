@@ -86,10 +86,10 @@ def action_proxy(data, is_inspect=False):
             print(result)
             add_notice(json.dumps(result))
             return "reject"
-    else:
-        result = 'Invalid input'
-        add_notice(json.dumps(result))
-        return "reject"
+    # else:
+    #     result = 'Invalid input'
+    #     add_notice(json.dumps(result))
+    #     return "reject"
 
     if payload['action'] == actions.CAMPAIGN_DETAIL:
         result = get_campaign_detail(payload['campaign_id'])
