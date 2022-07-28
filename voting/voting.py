@@ -36,26 +36,28 @@ ERC20_TRANSFER_HEADER = b'Y\xda*\x98N\x16Z\xe4H|\x99\xe5\xd1\xdc\xa7\xe0L\x8a\x9
 def add_notice(message):
     message = to_hex(message)
     print("Adding notice")
-    response_data = requests.post(rollup_server + "/notice", json={"payload": message})
-    print(f"Received notice status {response_data.status_code} body {response_data.json()}")
-    return True
+    response_data = requests.post(rollup_server + "/notice", json={"status": "accept", "payload": message})
+    print(f"Received notice status {response_data.status_code}")
+    return "accept"
 
 
 def call_finish():
     print("Finishing")
     response_data = requests.post(rollup_server + "/finish", json={"status": "accept"})
     print(f"Received finish status {response_data.status_code}")
-    return True
+    return "accept"
 
 
 def add_report(payload):
     print("Adding report")
-    response_data = requests.post(rollup_server + "/report", json={"status": "accept", "payload": payload})
-    print(f"Received finish status {response_data.status_code}")
-    return True
+    response_data = requests.post(rollup_server + "/report", json={"payload": to_hex(payload)})
+    print(response_data.status_code)
+    print(response_data.content)
+    print(f"Received report status {response_data.status_code}")
+    return "accept"
 
 
-def action_proxy(data):
+def action_proxy(data, is_inspect=False):
     initialize_tables()
     try:
         payload = bytes.fromhex(data["payload"][2:]).decode()
@@ -133,7 +135,10 @@ def action_proxy(data):
 
     print(result)
     print("Result type: " + type(result).__name__)
-    add_notice(json.dumps(result))
+    if is_inspect:
+        add_report(json.dumps(result))
+    else:
+        add_notice(json.dumps(result))
 
 
 def handle_advance(data):
@@ -144,7 +149,16 @@ def handle_advance(data):
 
 def handle_inspect(data):
     logger.info(f"Received inspect request data {data}")
-    action_proxy(data)
+    try:
+        data = bytes.fromhex(data["payload"][2:]).decode()
+        data = json.loads(data)
+        print(data)
+    except Exception as e:
+        print('Invalid payload inspect')
+        add_report('Invalid payload inspect')
+        return 'reject'
+
+    action_proxy(data, True)
     return "accept"
 
 
