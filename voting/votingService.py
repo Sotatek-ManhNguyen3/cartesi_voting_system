@@ -2,6 +2,21 @@ from dataService import *
 from lib.helpers import get_date_time_from_string
 
 
+def get_detail_candidate(campaign_id, candidate_id):
+    return {
+        'candidate': detail_candidate(campaign_id, candidate_id)
+    }
+
+
+def get_voting_result(user, campaign_id):
+    voted = voted_candidate(user, campaign_id)
+
+    return {
+        'voted_candidate': None if 'error' in voted.keys() else voted,
+        'campaign': voting_result(campaign_id)
+    }
+
+
 def add_deposit_user(user, amount):
     deposit_info = get_deposit_info(user)
 
@@ -68,6 +83,7 @@ def create_new_campaign(creator, payload):
                 candidate['name'],
                 campaign['id'],
                 candidate['brief_introduction'] if 'brief_introduction' in candidate.keys() else '',
+                candidate['avatar']
             ])
 
         add_candidates(candidates)
@@ -145,10 +161,12 @@ def initialize_tables():
     create_base_tables()
 
 
-def get_campaign_detail(campaign_id):
+def get_campaign_detail(user, campaign_id):
+    voted = voted_candidate(user, campaign_id);
     return {
         'candidates': list_all_candidates(campaign_id),
         'campaign': get_campaign(campaign_id),
+        'voted': None if 'error' in voted.keys() else voted
     }
 
 

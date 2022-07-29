@@ -118,5 +118,21 @@ VALIDATE_RULES = {
             'type': 'int',
             'nullable': False
         }
+    },
+    actions.RESULT: {
+        'campaign_id': {
+            'type': 'int',
+            'nullable': False
+        },
+    },
+    actions.CANDIDATE_DETAIL: {
+        'campaign_id': {
+            'type': 'int',
+            'nullable': False
+        },
+        'candidate_id': {
+            'type': 'int',
+            'nullable': False
+        },
     }
 }
