@@ -135,7 +135,8 @@ def vote_candidate(user, candidate_id, campaign_id):
 
 
 def voted_candidate(user, campaign_id):
-    query = 'select * from voting where user = ? and campaign_id = ?'
+    query = 'select * from voting join candidates on voting.candidate_id = candidates.id ' \
+            'where voting.user = ? and voting.campaign_id = ?'
     voted = select_data(query, (user, campaign_id))
     if len(voted) == 0:
         return {'error': 'You did not vote yet'}

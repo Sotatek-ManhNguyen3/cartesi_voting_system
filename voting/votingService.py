@@ -43,7 +43,7 @@ def vote(user, candidate_id, campaign_id, timestamp):
     campaign = campaign[0]
     start_time = get_date_time_from_string(campaign['start_time'])
     end_time = get_date_time_from_string(campaign['end_time'])
-    now = datetime.datetime.fromtimestamp(timestamp)
+    now = datetime.datetime.fromtimestamp(timestamp / 1000)
     if now.__lt__(start_time) or now.__gt__(end_time):
         return {'error': 'This campaign is closed for voting'}
 
