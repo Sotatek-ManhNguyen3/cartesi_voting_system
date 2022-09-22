@@ -1,0 +1,6 @@
+{
+  "fs": {
+    "files": [".env", "actions.py", "historyActions.py", "consts.py", "metadata.py", "dataService.py", "notificationActions.py", "notificationService.py", "logService.py", "votingService.py", "metadata.py", "lib/helpers.py", "lib/validator.py", "voting.py", "entrypoint.sh"],
+    "size": 131072
+  }
+}
