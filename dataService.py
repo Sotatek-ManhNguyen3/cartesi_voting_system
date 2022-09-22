@@ -249,6 +249,7 @@ def update_data(query, data):
         with conn:
             cur = conn.cursor()
             cur.execute(query, data)
+            conn.commit()
             return {'message': 'Success'}
     except Exception as e:
         result = "EXCEPTION: " + e.__str__()
@@ -277,9 +278,11 @@ def insert_data(query, data):
         with conn:
             cur = conn.cursor()
             cur.execute(query, data)
-            return {'message': 'success', 'id': cur.lastrowid}
+            response = {'message': 'success', 'id': cur.lastrowid}
+            conn.commit()
+            return response
     except Exception as e:
-        result = "EXCEPTION: " + e.__str__()
+        result = {'error': "EXCEPTION: " + e.__str__()}
         print("NOTICE EXCEPTION" + e.__str__())
         return result
 
@@ -291,6 +294,7 @@ def insert_multiple_data(query, data):
         with conn:
             cur = conn.cursor()
             cur.executemany(query, data)
+            conn.commit()
             print('success')
             return {'message': 'Success'}
     except Exception as e:
@@ -490,7 +494,6 @@ def create_base_tables():
 
         add_candidates(query)
         conn.commit()
-        conn.close()
     else:
         print("Metadata exists")
 

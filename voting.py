@@ -191,7 +191,7 @@ def action_proxy(data, is_inspect=False):
     save_notification(user, payload['action'], payload, timestamp, result)
     hand_result(json.dumps(result), action_status)
 
-    return action_status
+    return consts.ACCEPT_STATUS
 
 
 def handle_advance(data):
