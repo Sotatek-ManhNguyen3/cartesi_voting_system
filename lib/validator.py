@@ -183,7 +183,6 @@ VALIDATE_RULES = {
             'nullable': False
         },
     },
-    actions.REMOVE_NOTIFICATION: {}
 }
 
 ALLOWED_ACTIONS_INSPECT = [
@@ -196,5 +195,4 @@ ALLOWED_ACTIONS_INSPECT = [
     actions.LIST_EXECUTED_VOUCHER,
     actions.ACTION_HISTORY,
     actions.NOTIFICATION,
-    actions.REMOVE_NOTIFICATION
 ]

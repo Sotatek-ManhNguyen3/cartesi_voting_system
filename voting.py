@@ -17,7 +17,7 @@ import json
 import actions
 import consts
 from votingService import vote, create_new_campaign, get_voted_candidate, get_notification, \
-    initialize_tables, get_campaign_detail, get_actions_histories, remove_notification, \
+    initialize_tables, get_campaign_detail, get_actions_histories, \
     all_campaigns, to_hex, add_deposit_user, get_voting_result, get_detail_candidate, \
     edit_campaign, delete_campaign, get_deposit_info_of_user, withdraw_money, save_executed_voucher_for_user, \
     get_executed_vouchers
@@ -172,8 +172,6 @@ def action_proxy(data, is_inspect=False):
         result = get_executed_vouchers(user)
     elif payload['action'] == actions.ACTION_HISTORY:
         result = get_actions_histories(user, payload['page'], payload['limit'], payload['type'])
-    elif payload['action'] == actions.REMOVE_NOTIFICATION:
-        result = remove_notification(user)
     elif payload['action'] == actions.NOTIFICATION:
         result = get_notification(user, payload['page'], payload['limit'])
     else:

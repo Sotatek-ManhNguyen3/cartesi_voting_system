@@ -6,11 +6,6 @@ from logService import log_action, format_action_histories
 BASE_AMOUNT = 1000000000000000000
 
 
-def remove_notification(user):
-    remove_notification_data(user)
-    return {'message': 'Remove notifications successfully'}
-
-
 def get_notification(user, page, limit):
     return get_notifications_data(user, page, limit)
 

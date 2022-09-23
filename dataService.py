@@ -5,8 +5,14 @@ import metadata
 
 
 def remove_notification_data(user):
-    query = 'delete from notifications where user = ?'
-    return update_data(query, (user,))
+    query = 'select id from notifications where user = ? order by id desc limit 1 offset ?'
+    result = select_data(query, (user, metadata.MAX_NOTIFICATIONS))
+    if len(result) == 0:
+        return
+
+    id_need_delete = result[0]['id']
+    query = 'delete from notifications where user = ? and id <= ?'
+    return update_data(query, (user, id_need_delete))
 
 
 def get_notifications_data(user, page, limit):
@@ -249,7 +255,6 @@ def update_data(query, data):
         with conn:
             cur = conn.cursor()
             cur.execute(query, data)
-            conn.commit()
             return {'message': 'Success'}
     except Exception as e:
         result = "EXCEPTION: " + e.__str__()
@@ -278,9 +283,7 @@ def insert_data(query, data):
         with conn:
             cur = conn.cursor()
             cur.execute(query, data)
-            response = {'message': 'success', 'id': cur.lastrowid}
-            conn.commit()
-            return response
+            return {'message': 'success', 'id': cur.lastrowid}
     except Exception as e:
         result = {'error': "EXCEPTION: " + e.__str__()}
         print("NOTICE EXCEPTION" + e.__str__())
@@ -294,11 +297,10 @@ def insert_multiple_data(query, data):
         with conn:
             cur = conn.cursor()
             cur.executemany(query, data)
-            conn.commit()
             print('success')
             return {'message': 'Success'}
     except Exception as e:
-        result = "EXCEPTION: " + e.__str__()
+        result = {'error': "EXCEPTION: " + e.__str__()}
         print("NOTICE EXCEPTION" + e.__str__())
         return result
 
@@ -494,6 +496,7 @@ def create_base_tables():
 
         add_candidates(query)
         conn.commit()
+        conn.close()
     else:
         print("Metadata exists")
 

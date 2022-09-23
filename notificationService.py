@@ -43,3 +43,4 @@ def save_notification(user, action, request, timestamp, response):
         payload['amount'] = request['amount'] / BASE_AMOUNT
 
     save_notification_data(user, action, json.dumps(payload), str(time), 'error' if is_error else 'success')
+    remove_notification_data(user)
