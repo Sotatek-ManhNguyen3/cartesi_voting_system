@@ -237,6 +237,12 @@ When developing an application, it is often important to easily test and debug i
 
 This DApp's back-end is written in Python, so to run it in your machine you need to have `python3` installed.
 
+First, you need to run the local environment by running this command:
+
+```shell
+docker compose -f docker-compose.yml -f docker-compose-host.yml up -d
+```
+
 In order to start the back-end, run the following commands in a dedicated terminal:
 
 ```shell

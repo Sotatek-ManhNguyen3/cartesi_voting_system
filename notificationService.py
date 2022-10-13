@@ -37,10 +37,13 @@ def save_notification(user, action, request, timestamp, response):
         payload['campaign'] = None if len(campaign) == 0 else campaign[0]
     elif action == NOTIFICATION_ACTIONS['WITHDRAW']:
         payload['amount'] = int(request['amount']) / BASE_AMOUNT
+        payload['token'] = request['token_address']
     elif action == NOTIFICATION_ACTIONS['DEPOSIT']:
         payload['amount'] = request['amount'] / BASE_AMOUNT
+        payload['token'] = request['token']
     elif action == NOTIFICATION_ACTIONS['DECREASE_TOKEN']:
         payload['amount'] = request['amount'] / BASE_AMOUNT
+        payload['token'] = request['token']
 
     save_notification_data(user, action, json.dumps(payload), str(time), 'error' if is_error else 'success')
     remove_notification_data(user)

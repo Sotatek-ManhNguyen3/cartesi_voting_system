@@ -1,6 +1,6 @@
 from historyActions import ACTIONS
 from dataService import *
-from lib.helpers import get_date_time_from_string
+from lib.helpers import get_date_time_from_string, get_fee
 from logService import log_action, format_action_histories
 
 BASE_AMOUNT = 1000000000000000000
@@ -28,11 +28,12 @@ def get_executed_vouchers(user):
     return {'ids': ids}
 
 
-def save_executed_voucher_for_user(user, voucher_id, timestamp, amount):
+def save_executed_voucher_for_user(user, voucher_id, timestamp, amount, token):
     save_executed_voucher(user, voucher_id)
     # Log execute voucher
     log_action(user, ACTIONS['EXECUTE_VOUCHER'], {
         'voucher_id': voucher_id,
+        'token': token,
         'amount': amount,
         'time': str(datetime.datetime.fromtimestamp(timestamp))
     }, timestamp)
@@ -40,55 +41,42 @@ def save_executed_voucher_for_user(user, voucher_id, timestamp, amount):
     return {'message': 'Save successfully'}
 
 
-def withdraw_money(user, amount, timestamp):
-    is_enough_money = do_user_have_enough_money(user, amount)
+def withdraw_money(user, amount, timestamp, token):
+    is_enough_money = do_user_have_enough_money(user, token, amount)
 
     if not is_enough_money:
         return {'error': 'You do not have enough token!'}
 
-    withdraw_money_from_user(user, amount)
+    withdraw_money_from_user(user, amount, token)
 
     # Log withdraw money
     log_action(user, ACTIONS['WITHDRAW'], {
         'amount': amount,
+        'toke': token,
         'time': str(datetime.datetime.fromtimestamp(timestamp))
     }, timestamp)
 
     return {'message': 'Withdraw money successfully!'}
 
 
-def withdraw_money_from_user(user, amount):
-    return update_withdrawn_amount_user(user, amount)
+def withdraw_money_from_user(user, amount, token):
+    return update_withdrawn_amount_user(user, amount, token)
 
 
-def deduct_money_from_user(user, amount=metadata.FEE_IN_SYSTEM):
+def deduct_money_from_user(user, amount=metadata.DEFAULT_FEE_IN_SYSTEM):
     return update_used_amount_user(user, amount)
 
 
-def do_user_have_enough_money(user, amount=metadata.FEE_IN_SYSTEM):
-    deposit_info = get_deposit_info_of_user(user)
+def do_user_have_enough_money(user, token, amount=None):
+    amount = get_fee(token) if amount is None else amount
+    deposit_info = get_deposit_info_of_token(user, token)
     remain_amount = deposit_info['amount'] - deposit_info['used_amount'] - deposit_info['withdrawn_amount']
     return remain_amount >= amount
 
 
 def get_deposit_info_of_user(user):
-    info = get_deposit_info(user)
-
-    if len(info) == 0:
-        return {
-            'amount': 0,
-            'used_amount': 0,
-            'withdrawn_amount': 0,
-            'contract_address': ''
-        }
-    else:
-        info = info[0]
-        return {
-            'amount': info['amount'],
-            'used_amount': info['used_amount'],
-            'withdrawn_amount': info['withdrawn_amount'],
-            'contract_address': info['contract_address']
-        }
+    # response exp: [{amount: number; used_amount: number; withdrawn_amount: number; contract_address: text}]
+    return get_deposit_info(user)
 
 
 def delete_campaign(campaign_id, user, timestamp):
@@ -130,17 +118,18 @@ def get_voting_result(user, campaign_id):
 
 
 # Add deposit money for user
-def add_deposit_user(user, amount, contract_address, timestamp):
-    deposit_info = get_deposit_info(user)
+def add_deposit_user(user, amount, token, timestamp):
+    deposit_info = get_deposit_info_of_token(user, token)
 
     if len(deposit_info) == 0:
-        create_deposit_info(user, amount, contract_address)
+        create_deposit_info(user, amount, token)
     else:
-        update_deposit_amount(user, amount)
+        update_deposit_amount(user, amount, token)
 
     # Log deposit
     log_action(user, ACTIONS['DEPOSIT'], {
         'amount': amount,
+        'token': token,
         'time': str(datetime.datetime.fromtimestamp(timestamp))
     }, timestamp)
 
@@ -152,7 +141,7 @@ def add_deposit_user(user, amount, contract_address, timestamp):
 # Only user with free coin greater than 10 can vote
 # User can only vote for 1 candidate per 1 campaign
 # Can not vote if the time vote is not in the acceptable time range
-def vote(user, candidate_id, campaign_id, timestamp):
+def vote(user, candidate_id, campaign_id, token_address, timestamp):
     # Validate campaign and valid time to vote
     campaign = get_campaign(campaign_id)
 
@@ -182,7 +171,7 @@ def vote(user, candidate_id, campaign_id, timestamp):
         return {'error': 'You can only vote for one candidate'}
 
     # Validate money
-    have_enough_money = do_user_have_enough_money(user)
+    have_enough_money = do_user_have_enough_money(user, token_address)
     if not have_enough_money:
         return {'error': 'You do not have enough coin to vote! You need at least 10 unused coin!'}
 
@@ -198,10 +187,11 @@ def vote(user, candidate_id, campaign_id, timestamp):
         'time': str(now)
     }, timestamp)
 
-    deduct_money_from_user(user)
+    deduct_money_from_user(user, get_fee(token_address))
     # Log deduct money
     log_action(user, ACTIONS['DECREASE_TOKEN'], {
-        'amount': metadata.FEE_IN_SYSTEM,
+        'amount': get_fee(token_address),
+        'token': token_address,
         'time': str(datetime.datetime.fromtimestamp(timestamp)),
         'reason': 'you voted for a candidate'
     }, timestamp)
@@ -211,13 +201,13 @@ def vote(user, candidate_id, campaign_id, timestamp):
 
 
 # Create new campaign
-def create_new_campaign(creator, payload, timestamp):
+def create_new_campaign(creator, payload, timestamp, token_address):
     try:
         if type(payload['candidates']) is not list:
             return {'error': 'Wrong input format'}
 
         # Validate money
-        have_enough_money = do_user_have_enough_money(creator)
+        have_enough_money = do_user_have_enough_money(creator, token_address)
         if not have_enough_money:
             return {'error': 'You do not have enough coin to vote! You need at least 10 unused coin!'}
 
@@ -244,11 +234,12 @@ def create_new_campaign(creator, payload, timestamp):
             'time': str(datetime.datetime.fromtimestamp(timestamp))
         }, timestamp)
 
-        deduct_money_from_user(creator)
+        deduct_money_from_user(creator, get_fee(token_address))
 
         # Log deduct money
         log_action(creator, ACTIONS['DECREASE_TOKEN'], {
-            'amount': metadata.FEE_IN_SYSTEM,
+            'amount': get_fee(token_address),
+            'token': token_address,
             'time': str(datetime.datetime.fromtimestamp(timestamp)),
             'reason': 'create campaign'
         }, timestamp)

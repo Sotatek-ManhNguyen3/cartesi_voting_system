@@ -1,7 +1,7 @@
 import datetime
 import json
 import sqlite3
-import metadata
+from lib import metadata
 
 
 def remove_notification_data(user):
@@ -69,12 +69,12 @@ def list_executed_vouchers(user):
     return select_data(query, (user,))
 
 
-def update_withdrawn_amount_user(user, amount):
-    query = 'update deposit set withdrawn_amount = withdrawn_amount + ? where user = ?'
-    return update_data(query, (amount, user))
+def update_withdrawn_amount_user(user, amount, token):
+    query = 'update deposit set withdrawn_amount = withdrawn_amount + ? where user = ? and token = ?'
+    return update_data(query, (amount, user, token))
 
 
-def update_used_amount_user(user, amount=metadata.FEE_IN_SYSTEM):
+def update_used_amount_user(user, amount=metadata.DEFAULT_FEE_IN_SYSTEM):
     query = 'update deposit set used_amount = used_amount + ? where user = ?'
     return update_data(query, (amount, user))
 
@@ -101,19 +101,24 @@ def voting_result(campaign_id):
     return select_data(query, (campaign_id,))
 
 
-def update_deposit_amount(user, amount):
-    query = 'update deposit set amount = amount + ? where user = ?'
-    return update_data(query, (amount, user))
+def update_deposit_amount(user, amount, token):
+    query = 'update deposit set amount = amount + ? where user = ? and token = ?'
+    return update_data(query, (amount, user, token))
 
 
-def create_deposit_info(user, amount, contract_address):
+def create_deposit_info(user, amount, token):
     query = 'insert into deposit (user, amount, contract_address) values (?, ?, ?)'
-    return insert_data(query, (user, amount, contract_address))
+    return insert_data(query, (user, amount, token))
 
 
 def get_deposit_info(user):
     query = 'select * from deposit where user = ?'
     return select_data(query, (user,))
+
+
+def get_deposit_info_of_token(user, token):
+    query = 'select * from deposit where user = ? and contract_address = ?'
+    return select_data(query, (user, token))
 
 
 def delete_campaign_info(campaign_id):

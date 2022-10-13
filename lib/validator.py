@@ -51,6 +51,10 @@ VALIDATE_RULES = {
         'campaign_id': {
             'type': 'int',
             'nullable': False
+        },
+        'token_address': {
+            'type': 'str',
+            'nullable': False
         }
     },
     actions.CREATE_CAMPAIGN: {
@@ -72,6 +76,10 @@ VALIDATE_RULES = {
         },
         'candidates': {
             'type': 'list',
+            'nullable': False
+        },
+        'token_address': {
+            'type': 'str',
             'nullable': False
         }
     },
@@ -146,6 +154,10 @@ VALIDATE_RULES = {
         'amount': {
             'type': 'str',
             'nullable': False
+        },
+        'token_address': {
+            'type': 'str',
+            'nullable': False
         }
     },
     actions.SAVE_EXECUTED_VOUCHER: {
@@ -155,6 +167,10 @@ VALIDATE_RULES = {
         },
         'amount': {
             'type': 'int',
+            'nullable': False
+        },
+        'token_address': {
+            'type': 'str',
             'nullable': False
         }
     },

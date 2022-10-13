@@ -17,7 +17,7 @@ import json
 import actions
 import consts
 from votingService import vote, create_new_campaign, get_voted_candidate, get_notification, \
-    initialize_tables, get_campaign_detail, get_actions_histories, \
+    initialize_tables, get_campaign_detail, get_actions_histories, get_deposit_info_of_token, \
     all_campaigns, to_hex, add_deposit_user, get_voting_result, get_detail_candidate, \
     edit_campaign, delete_campaign, get_deposit_info_of_user, withdraw_money, save_executed_voucher_for_user, \
     get_executed_vouchers
@@ -138,10 +138,11 @@ def action_proxy(data, is_inspect=False):
             user,
             payload['candidate_id'],
             payload['campaign_id'],
+            payload['token_address'],
             timestamp
         )
     elif payload['action'] == actions.CREATE_CAMPAIGN:
-        result = create_new_campaign(user, payload, timestamp)
+        result = create_new_campaign(user, payload, timestamp, payload['token_address'])
     elif payload['action'] == actions.LIST_CAMPAIGN:
         result = all_campaigns(
             payload['page'],
@@ -163,11 +164,17 @@ def action_proxy(data, is_inspect=False):
         result = get_deposit_info_of_user(user)
     elif payload['action'] == actions.WITHDRAW:
         amount = int(payload['amount'])
-        result = withdraw_money(user, amount / BASE_AMOUNT, timestamp)
+        result = withdraw_money(user, amount / BASE_AMOUNT, timestamp, payload['token_address'])
         if 'error' not in result.keys():
-            handle_withdraw_money(user, amount)
+            handle_withdraw_money(user, amount, payload['token_address'])
     elif payload['action'] == actions.SAVE_EXECUTED_VOUCHER:
-        result = save_executed_voucher_for_user(user, payload['id'], timestamp, payload['amount'])
+        result = save_executed_voucher_for_user(
+            user,
+            payload['id'],
+            timestamp,
+            payload['amount'],
+            payload['token_address']
+        )
     elif payload['action'] == actions.LIST_EXECUTED_VOUCHER:
         result = get_executed_vouchers(user)
     elif payload['action'] == actions.ACTION_HISTORY:
@@ -248,20 +255,27 @@ def handle_deposit_money(payload, sender, timestamp):
         print(f"Adding notice: {json.dumps(result)}")
         add_deposit_user(user, amount / BASE_AMOUNT, erc20_contract, timestamp)
         add_notice(json.dumps(result))
-        save_notification(user, NOTIFICATION_ACTIONS['DEPOSIT'], {'amount': amount}, timestamp, result)
+        save_notification(
+            user,
+            NOTIFICATION_ACTIONS['DEPOSIT'],
+            {'amount': amount, 'token': erc20_contract},
+            timestamp,
+            result
+        )
         return consts.ACCEPT_STATUS
     except Exception as e:
         print(e)
         return reject_input(f"Error processing data{payload}", payload)
 
 
-def handle_withdraw_money(user, amount):
-    deposit_info = get_deposit_info_of_user(user)
+def handle_withdraw_money(user, amount, token):
+    deposit_info = get_deposit_info_of_token(user, token)
     # Encode a transfer function call that returns the amount back to the depositor
     print('return amount', amount)
     timestamp = int(datetime.datetime.now().timestamp())
     transfer_payload = \
-        TRANSFER_FUNCTION_SELECTOR + encode_abi(['address', 'uint256', 'uint256'], [user, amount, timestamp])
+        TRANSFER_FUNCTION_SELECTOR \
+        + encode_abi(['address', 'uint256', 'address', 'uint256'], [user, amount, token, timestamp])
     # Post voucher executing the transfer on the ERC-20 contract: "I don't want your money"!
     voucher = {"address": deposit_info['contract_address'], "payload": "0x" + transfer_payload.hex()}
     logger.info(f"Issuing voucher {voucher}")
