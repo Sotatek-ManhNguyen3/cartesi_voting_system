@@ -76,7 +76,7 @@ def do_user_have_enough_money(user, token, amount=None):
 
 def get_deposit_info_of_user(user):
     # response exp: [{amount: number; used_amount: number; withdrawn_amount: number; contract_address: text}]
-    return get_deposit_info(user)
+    return {'data': get_deposit_info(user)}
 
 
 def delete_campaign(campaign_id, user, timestamp):
