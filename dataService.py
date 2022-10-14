@@ -102,7 +102,7 @@ def voting_result(campaign_id):
 
 
 def update_deposit_amount(user, amount, token):
-    query = 'update deposit set amount = amount + ? where user = ? and token = ?'
+    query = 'update deposit set amount = amount + ? where user = ? and contract_address = ?'
     return update_data(query, (amount, user, token))
 
 
