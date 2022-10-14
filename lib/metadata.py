@@ -4,6 +4,16 @@ FEE_IN_SYSTEM = {
             "name": "CTSI",
             "address": "0x610178da211fef7d417bc0e6fed39f05609ad788",
             "fee": 10
+        },
+        {
+            "name": "ETH",
+            "address": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
+            "fee": 0.0012
+        },
+        {
+            "name": "BNB",
+            "address": "0x70997970c51812dc3a010c7d01b50e0d17dc79c8",
+            "fee": 0.0012
         }
     ],
     "testnet": [
