@@ -1,6 +1,6 @@
 import datetime
-import lib.metadata
-import lib.config
+import lib.metadata as metadata
+import lib.config as config
 
 
 def get_date_time_from_string(time):

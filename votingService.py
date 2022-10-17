@@ -70,6 +70,10 @@ def deduct_money_from_user(user, amount=metadata.DEFAULT_FEE_IN_SYSTEM):
 def do_user_have_enough_money(user, token, amount=None):
     amount = get_fee(token) if amount is None else amount
     deposit_info = get_deposit_info_of_token(user, token)
+    if len(deposit_info) == 0:
+        return False
+
+    deposit_info = deposit_info[0]
     remain_amount = deposit_info['amount'] - deposit_info['used_amount'] - deposit_info['withdrawn_amount']
     return remain_amount >= amount
 

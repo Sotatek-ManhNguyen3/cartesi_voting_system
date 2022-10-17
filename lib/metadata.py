@@ -6,8 +6,8 @@ FEE_IN_SYSTEM = {
             "fee": 10
         },
         {
-            "name": "ETH",
-            "address": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
+            "name": "SOTA",
+            "address": "0xa82ff9afd8f496c3d6ac40e2a0f282e47488cfc9",
             "fee": 0.0012
         },
         {
