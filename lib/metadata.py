@@ -7,13 +7,8 @@ FEE_IN_SYSTEM = {
         },
         {
             "name": "SOTA",
-            "address": "0xa82ff9afd8f496c3d6ac40e2a0f282e47488cfc9",
-            "fee": 0.0012
-        },
-        {
-            "name": "BNB",
-            "address": "0x70997970c51812dc3a010c7d01b50e0d17dc79c8",
-            "fee": 0.0012
+            "address": "0x67d269191c92caf3cd7723f116c85e6e9bf55933",
+            "fee": 0.012
         }
     ],
     "testnet": [

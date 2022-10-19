@@ -138,7 +138,7 @@ def action_proxy(data, is_inspect=False):
             user,
             payload['candidate_id'],
             payload['campaign_id'],
-            payload['token_address'],
+            payload['token_address'].lower(),
             timestamp
         )
     elif payload['action'] == actions.CREATE_CAMPAIGN:
@@ -269,7 +269,7 @@ def handle_deposit_money(payload, sender, timestamp):
 
 
 def handle_withdraw_money(user, amount, token):
-    deposit_info = get_deposit_info_of_token(user, token)
+    deposit_info = get_deposit_info_of_token(user, token)[0]
     # Encode a transfer function call that returns the amount back to the depositor
     print('return amount', amount)
     timestamp = int(datetime.datetime.now().timestamp())

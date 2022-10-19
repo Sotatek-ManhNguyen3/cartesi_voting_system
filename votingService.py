@@ -63,8 +63,8 @@ def withdraw_money_from_user(user, amount, token):
     return update_withdrawn_amount_user(user, amount, token)
 
 
-def deduct_money_from_user(user, amount=metadata.DEFAULT_FEE_IN_SYSTEM):
-    return update_used_amount_user(user, amount)
+def deduct_money_from_user(user, token, amount=metadata.DEFAULT_FEE_IN_SYSTEM):
+    return update_used_amount_user(user, token, amount)
 
 
 def do_user_have_enough_money(user, token, amount=None):
@@ -191,7 +191,7 @@ def vote(user, candidate_id, campaign_id, token_address, timestamp):
         'time': str(now)
     }, timestamp)
 
-    deduct_money_from_user(user, get_fee(token_address))
+    deduct_money_from_user(user, token_address, get_fee(token_address))
     # Log deduct money
     log_action(user, ACTIONS['DECREASE_TOKEN'], {
         'amount': get_fee(token_address),
@@ -238,7 +238,7 @@ def create_new_campaign(creator, payload, timestamp, token_address):
             'time': str(datetime.datetime.fromtimestamp(timestamp))
         }, timestamp)
 
-        deduct_money_from_user(creator, get_fee(token_address))
+        deduct_money_from_user(creator, token_address, get_fee(token_address))
 
         # Log deduct money
         log_action(creator, ACTIONS['DECREASE_TOKEN'], {

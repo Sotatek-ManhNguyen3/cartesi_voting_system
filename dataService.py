@@ -70,13 +70,13 @@ def list_executed_vouchers(user):
 
 
 def update_withdrawn_amount_user(user, amount, token):
-    query = 'update deposit set withdrawn_amount = withdrawn_amount + ? where user = ? and token = ?'
+    query = 'update deposit set withdrawn_amount = withdrawn_amount + ? where user = ? and contract_address = ?'
     return update_data(query, (amount, user, token))
 
 
-def update_used_amount_user(user, amount=metadata.DEFAULT_FEE_IN_SYSTEM):
-    query = 'update deposit set used_amount = used_amount + ? where user = ?'
-    return update_data(query, (amount, user))
+def update_used_amount_user(user, token, amount=metadata.DEFAULT_FEE_IN_SYSTEM):
+    query = 'update deposit set used_amount = used_amount + ? where user = ? and contract_address = ?'
+    return update_data(query, (amount, user, token))
 
 
 def get_total_vote_of_campaign(campaign_id):
