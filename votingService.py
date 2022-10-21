@@ -142,7 +142,7 @@ def add_deposit_user(user, amount, token, timestamp):
 
 # Vote for a candidate
 # Rules:
-# Only user with free coin greater than 10 can vote
+# Only user with free coin greater than the config fee can vote
 # User can only vote for 1 candidate per 1 campaign
 # Can not vote if the time vote is not in the acceptable time range
 def vote(user, candidate_id, campaign_id, token_address, timestamp):
@@ -177,7 +177,7 @@ def vote(user, candidate_id, campaign_id, token_address, timestamp):
     # Validate money
     have_enough_money = do_user_have_enough_money(user, token_address)
     if not have_enough_money:
-        return {'error': 'You do not have enough coin to vote! You need at least 10 unused coin!'}
+        return {'error': f'You do not have enough coin to vote! You need at least {get_fee(token_address)} unused coin!'}
 
     # Vote
     result = vote_candidate(user, candidate_id, campaign_id)
@@ -213,7 +213,7 @@ def create_new_campaign(creator, payload, timestamp, token_address):
         # Validate money
         have_enough_money = do_user_have_enough_money(creator, token_address)
         if not have_enough_money:
-            return {'error': 'You do not have enough coin to vote! You need at least 10 unused coin!'}
+            return {'error': f'You do not have enough coin to vote! You need at least {get_fee(token_address)} unused coin!'}
 
         campaign = create_campaign(creator, payload['description'],
                                    payload['start_time'], payload['end_time'], payload['name'])

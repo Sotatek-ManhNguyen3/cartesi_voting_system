@@ -21,6 +21,11 @@ FEE_IN_SYSTEM = {
             "name": "GoerliETH",
             "address": "0x3f152b63ec5ca5831061b2dccfb29a874c317502",
             "fee": 0.0012
+        },
+        {
+            "name": "SOTA",
+            "address": "0x9a376701b73535fbfc2eb34fc119e125ec417d8b",
+            "fee": 0.5
         }
     ],
     "mainnet": []
