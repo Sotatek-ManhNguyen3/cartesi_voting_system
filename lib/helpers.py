@@ -1,5 +1,5 @@
 import datetime
-import lib.metadata as metadata
+import constants.metadata as metadata
 import lib.config as config
 
 

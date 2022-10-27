@@ -14,17 +14,17 @@ from os import environ
 import logging
 import requests
 import json
-import actions
-import consts
-from votingService import vote, create_new_campaign, get_voted_candidate, get_notification, \
+from constants import actions, consts
+from services.votingService import vote, create_new_campaign, get_voted_candidate, get_notification, \
     initialize_tables, get_campaign_detail, get_actions_histories, get_deposit_info_of_token, \
     all_campaigns, to_hex, add_deposit_user, get_voting_result, get_detail_candidate, \
     edit_campaign, delete_campaign, get_deposit_info_of_user, withdraw_money, save_executed_voucher_for_user, \
     get_executed_vouchers
 from lib.validator import validator, VALIDATE_RULES, ALLOWED_ACTIONS_INSPECT
 from eth_abi import decode_abi, encode_abi
-from notificationService import save_notification
-from notificationActions import NOTIFICATION_ACTIONS
+from services.notificationService import save_notification
+from services.adminService import handle_admin_action
+from constants.notificationActions import NOTIFICATION_ACTIONS
 
 logging.basicConfig(level="INFO")
 logger = logging.getLogger(__name__)
@@ -182,7 +182,7 @@ def action_proxy(data, is_inspect=False):
     elif payload['action'] == actions.NOTIFICATION:
         result = get_notification(user, payload['page'], payload['limit'])
     else:
-        result = {'error': 'No action founded'}
+        result = handle_admin_action(user, payload)
 
     print(result)
     print("Result type: " + type(result).__name__)

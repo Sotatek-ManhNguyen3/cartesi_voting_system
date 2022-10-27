@@ -1,5 +1,5 @@
-from notificationActions import NOTIFICATION_ACTIONS
-from dataService import *
+from constants.notificationActions import NOTIFICATION_ACTIONS
+from services.dataService import *
 BASE_AMOUNT = 1000000000000000000
 
 

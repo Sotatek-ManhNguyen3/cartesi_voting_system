@@ -1,4 +1,4 @@
-import actions
+from constants import actions
 from lib.helpers import get_date_time_from_string
 
 
@@ -20,7 +20,7 @@ def validator(variable, rules):
                 get_date_time_from_string(data)
                 continue
             except Exception as e:
-                print("NOTICE EXCEPTION" + e.__str__())
+                print('NOTICE EXCEPTION' + e.__str__())
                 return {'error': 'Invalid datetime format ' + key}
 
         if type(data).__name__ != rules[key]['type']:
@@ -199,6 +199,105 @@ VALIDATE_RULES = {
             'nullable': False
         },
     },
+    actions.ADD_ROLE: {
+        'user': {
+            'type': 'str',
+            'nullable': False
+        },
+        'manage_user': {
+            'type': 'int',
+            'nullable': False
+        },
+        'manage_token': {
+            'type': 'int',
+            'nullable': False
+        },
+        'manage_post': {
+            'type': 'int',
+            'nullable': False
+        },
+        'manage_system': {
+            'type': 'int',
+            'nullable': False
+        }
+    },
+    actions.LIST_ROLE: {
+        'roles': {
+            'type': 'list',
+            'nullable': True
+        }
+    },
+    actions.DELETE_ROLE: {
+        'user': {
+            'type': 'str',
+            'nullable': False
+        }
+    },
+    actions.UPDATE_ROLE: {
+        'user': {
+            'type': 'str',
+            'nullable': False
+        },
+        'manage_user': {
+            'type': 'int',
+            'nullable': False
+        },
+        'manage_token': {
+            'type': 'int',
+            'nullable': False
+        },
+        'manage_post': {
+            'type': 'int',
+            'nullable': False
+        },
+        'manage_system': {
+            'type': 'int',
+            'nullable': False
+        },
+        'id': {
+            'type': 'int',
+            'nullable': False
+        }
+    },
+    actions.ADD_TOKEN: {
+        'address': {
+            'type': 'str',
+            'nullable': False
+        },
+        'name': {
+            'type': 'str',
+            'nullable': False
+        },
+        'fee': {
+            'type': 'float',
+            'nullable': False
+        }
+    },
+    actions.LIST_TOKEN: {},
+    actions.DELETE_TOKEN: {
+        'address': {
+            'type': 'str',
+            'nullable': False
+        }
+    },
+    actions.UPDATE_TOKEN: {
+        'address': {
+            'type': 'str',
+            'nullable': False
+        },
+        'name': {
+            'type': 'str',
+            'nullable': False
+        },
+        'fee': {
+            'type': 'float',
+            'nullable': False
+        },
+        'id': {
+            'type': 'int',
+            'nullable': False
+        }
+    },
 }
 
 ALLOWED_ACTIONS_INSPECT = [
@@ -211,4 +310,6 @@ ALLOWED_ACTIONS_INSPECT = [
     actions.LIST_EXECUTED_VOUCHER,
     actions.ACTION_HISTORY,
     actions.NOTIFICATION,
+    actions.LIST_TOKEN,
+    actions.LIST_ROLE,
 ]

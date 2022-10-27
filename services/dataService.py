@@ -1,7 +1,66 @@
 import datetime
 import json
-import sqlite3
-from lib import metadata
+from constants import metadata
+from services.connection import *
+from services.sampleData import CANDIDATES
+
+
+def list_token():
+    query = 'select * from tokens'
+    return select_data(query, ())
+
+
+def delete_token(address):
+    query = 'delete from tokens where address = ?'
+    return update_data(query, (address,))
+
+
+def update_token(id_update, address, name, fee):
+    query = 'update tokens set address = ?, name = ?, fee = ? where id = ?'
+    return update_data(query, (address, name, fee, id_update))
+
+
+def create_token(address, name, fee):
+    query = 'insert into tokens (address, name, fee) values (?, ?, ?)'
+    return update_data(query, (address, name, fee))
+
+
+def get_token(address):
+    query = 'select * from tokens where address = ? limit 1'
+    return select_data(query, (address,))
+
+
+def update_role(id_update, user, manage_user, manage_token, manage_post, manage_system):
+    query = 'update roles set user = ?, manage_user = ?, manage_token = ?, manage_post = ?, manage_system = ? ' \
+            'where id = ?'
+    return update_data(query, (user, manage_user, manage_token, manage_post, manage_system, id_update))
+
+
+def delete_role(user):
+    query = 'delete from roles where user = ?'
+    return update_data(query, (user,))
+
+
+def list_role(roles):
+    condition = ''
+
+    if len(roles):
+        condition = ' where'
+        for role in roles:
+            condition = f' {role} = 1'
+
+    query = 'select * from roles' + condition
+    return select_data(query, ())
+
+
+def create_role(user, manage_user, manage_token, manage_post, manage_system):
+    query = 'insert into roles (user, manage_user, manage_token, manage_post, manage_system) values (?, ?, ?, ?, ?)'
+    return insert_data(query, (user, manage_user, manage_token, manage_post, manage_system))
+
+
+def get_role(user):
+    query = 'select * from roles where user=? limit 1'
+    return select_data(query, (user,))
 
 
 def remove_notification_data(user):
@@ -310,12 +369,6 @@ def insert_multiple_data(query, data):
         return result
 
 
-def init_conn():
-    conn = sqlite3.connect('voting_system.db')
-    conn.row_factory = dict_factory
-    return conn
-
-
 def create_base_tables():
     conn = init_conn()
     cur = conn.cursor()
@@ -407,6 +460,28 @@ def create_base_tables():
         query_index_notifications_user = "CREATE INDEX index_notifications_user on notifications(user)"
         cur.execute(query_index_notifications_user)
 
+        query_roles = "CREATE TABLE roles(" \
+                      "id INTEGER PRIMARY KEY AUTOINCREMENT," \
+                      "user TEXT NOT NULL," \
+                      "manage_user INTEGER NOT NULL DEFAULT 1," \
+                      "manage_token INTEGER NOT NULL DEFAULT 1," \
+                      "manage_post INTEGER NOT NULL DEFAULT 1," \
+                      "manage_system INTEGER NOT NULL DEFAULT 1)"
+        cur.execute(query_roles)
+
+        query_create_roles = 'INSERT INTO roles (user) values ("0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266")'
+        insert_data(query_create_roles, ())
+        query_create_roles = 'INSERT INTO roles (user) values ("0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266")'
+        insert_data(query_create_roles, ())
+
+        query_tokens = "CREATE TABLE tokens(" \
+                       "id INTEGER PRIMARY KEY AUTOINCREMENT," \
+                       "address TEXT NOT NULL," \
+                       "name TEXT NOT NULL," \
+                       "fee INTEGER NOT NULL," \
+                       "other_fee INTEGER NOT NULL DEFAULT 0)"
+        cur.execute(query_tokens)
+
         campaign = create_campaign(
             "0x8B39e23A121bAc9221698cD22ae7A6a80D64b1DC",
             'This is the default campaign of the system.',
@@ -416,82 +491,7 @@ def create_base_tables():
         )
 
         query = []
-        candidates = [
-            {
-                "name": "BTC",
-                "brief_introduction": "Bitcoin is a decentralized digital currency that can be transferred on the "
-                                      "peer-to-peer bitcoin network. Bitcoin transactions are verified by network "
-                                      "nodes through cryptography and recorded in a public distributed ledger called "
-                                      "a blockchain. ",
-                "avatar": "#4A4A4A"
-            },
-            {
-                "name": "ETH",
-                "brief_introduction": "Ethereum is a decentralized, open-source blockchain with smart contract "
-                                      "functionality. Ether is the native cryptocurrency of the platform. Among "
-                                      "cryptocurrencies, Ether is second only to Bitcoin in market capitalization. "
-                                      "Ethereum was conceived in 2013 by programmer Vitalik Buterin. ",
-                "avatar": "#F6B63C"
-            },
-            {
-                "name": "USDT",
-                "brief_introduction": "Tether, is an asset-backed cryptocurrency stablecoin. It was launched by the "
-                                      "company Tether Limited Inc. in 2014. Tether Limited is owned by the Hong "
-                                      "Kong-based company iFinex Inc., which also owns the Bitfinex cryptocurrency "
-                                      "exchange. ",
-                "avatar": "#F7882B"
-            },
-            {
-                "name": "BNB",
-                "brief_introduction": "Binance Coin (BNB) is a cryptocurrency that can be used to trade and pay fees "
-                                      "on the Binance cryptocurrency exchange. The Binance Exchange is the largest "
-                                      "cryptocurrency exchange in the world as of January 2018, facilitating more "
-                                      "than 1.4 million transactions per second. ",
-                "avatar": "#F35330"
-            },
-            {
-                "name": "CTSI",
-                "brief_introduction": "CTSI is a utility token that powers the Cartesi network, which aims to solve "
-                                      "blockchain scalability and high fees using technologies such as Optimistic "
-                                      "Rollups and side-chains. CTSI can be used for staking and fees for processing "
-                                      "data on the network. ",
-                "avatar": "#B0F5CD"
-            },
-            {
-                "name": "DOGE",
-                "brief_introduction": "Dogecoin is a cryptocurrency created by software engineers Billy Markus and "
-                                      "Jackson Palmer, who decided to create a payment system as a joke, making fun "
-                                      "of the wild speculation in cryptocurrencies at the time. It is considered both "
-                                      "the first meme coin, and, more specifically, the first dog coin. ",
-                "avatar": "#F7F7F7"
-            },
-            {
-                "name": "SOL",
-                "brief_introduction": "A sol is a type of colloid in which solid particles are suspended in a liquid. "
-                                      "The particles in a sol are very small. The colloidal solution displays the "
-                                      "Tyndall effect and is stable. Sols may be prepared via condensation or "
-                                      "dispersion. ",
-                "avatar": "#7a396d"
-            },
-            {
-                "name": "DOT",
-                "brief_introduction": "Polkadot is a protocol that connects blockchains — allowing value and data to "
-                                      "be sent across previously incompatible networks (Bitcoin and Ethereum, "
-                                      "for example). It's also designed to be fast and scalable. The DOT token is "
-                                      "used for staking and governance; it can be bought or sold on Coinbase and "
-                                      "other exchanges. ",
-                "avatar": "#F4AED8"
-            },
-            {
-                "name": "HEX",
-                "brief_introduction": "Hex (HEX) is an Ethereum-based token that is marketed as the first blockchain "
-                                      "certificate of deposit. Richard Heart launched Hex in 2019, utilizing an "
-                                      "aggressive marketing campaign to build its userbase. Users stake HEX tokens, "
-                                      "promising to leave them untouched for specified amounts of time. ",
-                "avatar": "#0156D3"
-            }
-        ]
-        for candidate in candidates:
+        for candidate in CANDIDATES:
             query.append([
                 candidate['name'],
                 campaign['id'],
@@ -504,10 +504,3 @@ def create_base_tables():
         conn.close()
     else:
         print("Metadata exists")
-
-
-def dict_factory(cursor, row):
-    d = {}
-    for idx, col in enumerate(cursor.description):
-        d[col[0]] = row[idx]
-    return d
