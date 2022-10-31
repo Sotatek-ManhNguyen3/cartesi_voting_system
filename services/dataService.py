@@ -471,8 +471,6 @@ def create_base_tables():
 
         query_create_roles = 'INSERT INTO roles (user) values ("0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266")'
         insert_data(query_create_roles, ())
-        query_create_roles = 'INSERT INTO roles (user) values ("0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266")'
-        insert_data(query_create_roles, ())
 
         query_tokens = "CREATE TABLE tokens(" \
                        "id INTEGER PRIMARY KEY AUTOINCREMENT," \
