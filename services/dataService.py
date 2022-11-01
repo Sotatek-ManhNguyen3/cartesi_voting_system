@@ -462,7 +462,7 @@ def create_base_tables():
 
         query_roles = "CREATE TABLE roles(" \
                       "id INTEGER PRIMARY KEY AUTOINCREMENT," \
-                      "user TEXT NOT NULL," \
+                      "user TEXT NOT NULL UNIQUE," \
                       "manage_user INTEGER NOT NULL DEFAULT 1," \
                       "manage_token INTEGER NOT NULL DEFAULT 1," \
                       "manage_post INTEGER NOT NULL DEFAULT 1," \
@@ -474,7 +474,7 @@ def create_base_tables():
 
         query_tokens = "CREATE TABLE tokens(" \
                        "id INTEGER PRIMARY KEY AUTOINCREMENT," \
-                       "address TEXT NOT NULL," \
+                       "address TEXT NOT NULL UNIQUE," \
                        "name TEXT NOT NULL," \
                        "fee INTEGER NOT NULL," \
                        "other_fee INTEGER NOT NULL DEFAULT 0)"

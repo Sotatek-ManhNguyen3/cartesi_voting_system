@@ -16,10 +16,10 @@ import requests
 import json
 from constants import actions, consts
 from services.votingService import vote, create_new_campaign, get_voted_candidate, get_notification, \
-    initialize_tables, get_campaign_detail, get_actions_histories, get_deposit_info_of_token, \
+    initialize_tables, get_campaign_detail, get_actions_histories, \
     all_campaigns, to_hex, add_deposit_user, get_voting_result, get_detail_candidate, \
     edit_campaign, delete_campaign, get_deposit_info_of_user, withdraw_money, save_executed_voucher_for_user, \
-    get_executed_vouchers
+    get_executed_vouchers, is_valid_token
 from lib.validator import validator, VALIDATE_RULES, ALLOWED_ACTIONS_INSPECT
 from eth_abi import decode_abi, encode_abi
 from services.notificationService import save_notification
@@ -253,6 +253,21 @@ def handle_deposit_money(payload, sender, timestamp):
 
         result = {'message': f"Deposit received from: {user}; ERC-20: {erc20_contract}; Amount: {amount}"}
         print(f"Adding notice: {json.dumps(result)}")
+
+        if not is_valid_token(erc20_contract):
+            print(f"Token is not acceptable, sending them back")
+            handle_withdraw_money(user, amount, erc20_contract)
+            result = {'error': "Token is not acceptable, we are sending them back to you as voucher!"}
+            save_notification(
+                user,
+                NOTIFICATION_ACTIONS['DEPOSIT'],
+                {'amount': amount, 'token': erc20_contract},
+                timestamp,
+                result
+            )
+            reject_input('Invalid token', json.dumps(result))
+            return consts.ACCEPT_STATUS
+
         add_deposit_user(user, amount / BASE_AMOUNT, erc20_contract, timestamp)
         add_notice(json.dumps(result))
         save_notification(
@@ -269,7 +284,6 @@ def handle_deposit_money(payload, sender, timestamp):
 
 
 def handle_withdraw_money(user, amount, token):
-    deposit_info = get_deposit_info_of_token(user, token)[0]
     # Encode a transfer function call that returns the amount back to the depositor
     print('return amount', amount)
     timestamp = int(datetime.datetime.now().timestamp())
@@ -277,7 +291,7 @@ def handle_withdraw_money(user, amount, token):
         TRANSFER_FUNCTION_SELECTOR \
         + encode_abi(['address', 'uint256', 'address', 'uint256'], [user, amount, token, timestamp])
     # Post voucher executing the transfer on the ERC-20 contract: "I don't want your money"!
-    voucher = {"address": deposit_info['contract_address'], "payload": "0x" + transfer_payload.hex()}
+    voucher = {"address": token, "payload": "0x" + transfer_payload.hex()}
     logger.info(f"Issuing voucher {voucher}")
     res = requests.post(rollup_server + "/voucher", json=voucher)
     logger.info(f"Received voucher status {res.status_code} body {res.content}")

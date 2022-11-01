@@ -1,9 +1,23 @@
 from constants.historyActions import ACTIONS
 from services.dataService import *
-from lib.helpers import get_date_time_from_string, get_fee
+from lib.helpers import get_date_time_from_string
 from services.logService import log_action, format_action_histories
+from constants import metadata
 
 BASE_AMOUNT = 1000000000000000000
+
+
+def is_valid_token(token_address):
+    token = get_token(token_address)
+    return len(token) != 0
+
+
+def get_fee(token_address):
+    token = get_token(token_address)
+    if len(token) == 0:
+        return metadata.DEFAULT_FEE_IN_SYSTEM
+
+    return token[0]['fee']
 
 
 def get_notification(user, page, limit):
@@ -146,6 +160,9 @@ def add_deposit_user(user, amount, token, timestamp):
 # User can only vote for 1 candidate per 1 campaign
 # Can not vote if the time vote is not in the acceptable time range
 def vote(user, candidate_id, campaign_id, token_address, timestamp):
+    if not is_valid_token(token_address):
+        return {'error': 'Token is invalid'}
+
     # Validate campaign and valid time to vote
     campaign = get_campaign(campaign_id)
 
@@ -207,6 +224,9 @@ def vote(user, candidate_id, campaign_id, token_address, timestamp):
 # Create new campaign
 def create_new_campaign(creator, payload, timestamp, token_address):
     try:
+        if not is_valid_token(token_address):
+            return {'error': 'Token is invalid'}
+
         if type(payload['candidates']) is not list:
             return {'error': 'Wrong input format'}
 
