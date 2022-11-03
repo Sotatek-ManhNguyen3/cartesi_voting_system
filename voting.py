@@ -18,8 +18,8 @@ from constants import actions, consts
 from services.votingService import vote, create_new_campaign, get_voted_candidate, get_notification, \
     initialize_tables, get_campaign_detail, get_actions_histories, \
     all_campaigns, to_hex, add_deposit_user, get_voting_result, get_detail_candidate, \
-    edit_campaign, delete_campaign, get_deposit_info_of_user, withdraw_money, save_executed_voucher_for_user, \
-    get_executed_vouchers, is_valid_token
+    edit_campaign, delete_campaign, get_user_info, withdraw_money, save_executed_voucher_for_user, \
+    get_executed_vouchers, is_valid_token, list_token
 from lib.validator import validator, VALIDATE_RULES, ALLOWED_ACTIONS_INSPECT
 from eth_abi import decode_abi, encode_abi
 from services.notificationService import save_notification
@@ -160,8 +160,8 @@ def action_proxy(data, is_inspect=False):
         result = edit_campaign(user, payload['id'], timestamp, payload)
     elif payload['action'] == actions.DELETE_CAMPAIGN:
         result = delete_campaign(payload['id'], user, timestamp)
-    elif payload['action'] == actions.DEPOSIT_INFO:
-        result = get_deposit_info_of_user(user)
+    elif payload['action'] == actions.USER_INFO:
+        result = get_user_info(user)
     elif payload['action'] == actions.WITHDRAW:
         amount = int(payload['amount'])
         result = withdraw_money(user, amount / BASE_AMOUNT, timestamp, payload['token_address'])
@@ -181,6 +181,8 @@ def action_proxy(data, is_inspect=False):
         result = get_actions_histories(user, payload['page'], payload['limit'], payload['type'])
     elif payload['action'] == actions.NOTIFICATION:
         result = get_notification(user, payload['page'], payload['limit'])
+    elif payload['action'] == actions.LIST_TOKEN:
+        result = {'data': list_token()}
     else:
         result = handle_admin_action(user, payload)
 

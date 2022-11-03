@@ -35,21 +35,17 @@ def handle_admin_action(sender, payload):
         if does_role_exist(payload['address'].lower()):
             return {'error': 'This token already exists!'}
 
-        return create_token(
-            payload['address'].lower(),
-            payload['name'],
-            payload['fee']
-        )
+        return create_token(payload['address'].lower(), payload['name'], payload['fee'],
+                            payload['icon'] if 'icon' in payload.keys() else None)
     elif payload['action'] == actions.DELETE_TOKEN:
         return delete_token(payload['address'].lower())
-    elif payload['action'] == actions.LIST_TOKEN:
-        return {'data': list_token()}
     elif payload['action'] == actions.UPDATE_TOKEN:
         return update_token(
             payload['id'],
             payload['address'].lower(),
             payload['name'],
-            payload['fee']
+            payload['fee'],
+            payload['icon'] if 'icon' in payload.keys() else None
         )
     else:
         return {'error': 'No action founded'}

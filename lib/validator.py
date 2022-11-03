@@ -149,7 +149,7 @@ VALIDATE_RULES = {
             'nullable': False
         },
     },
-    actions.DEPOSIT_INFO: {},
+    actions.USER_INFO: {},
     actions.WITHDRAW: {
         'amount': {
             'type': 'str',
@@ -271,6 +271,10 @@ VALIDATE_RULES = {
         'fee': {
             'type': 'float',
             'nullable': False
+        },
+        'icon': {
+            'type': 'str',
+            'nullable': True,
         }
     },
     actions.LIST_TOKEN: {},
@@ -306,7 +310,7 @@ ALLOWED_ACTIONS_INSPECT = [
     actions.LIST_CAMPAIGN,
     actions.RESULT,
     actions.CANDIDATE_DETAIL,
-    actions.DEPOSIT_INFO,
+    actions.USER_INFO,
     actions.LIST_EXECUTED_VOUCHER,
     actions.ACTION_HISTORY,
     actions.NOTIFICATION,

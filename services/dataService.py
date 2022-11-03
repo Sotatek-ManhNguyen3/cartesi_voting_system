@@ -15,14 +15,22 @@ def delete_token(address):
     return update_data(query, (address,))
 
 
-def update_token(id_update, address, name, fee):
-    query = 'update tokens set address = ?, name = ?, fee = ? where id = ?'
-    return update_data(query, (address, name, fee, id_update))
+def update_token(id_update, address, name, fee, icon):
+    if icon is None:
+        query = 'update tokens set address = ?, name = ?, fee = ? where id = ?'
+        return update_data(query, (address, name, fee, id_update))
+    else:
+        query = 'update tokens set address = ?, name = ?, fee = ?, icon = ? where id = ?'
+        return update_data(query, (address, name, fee, icon, id_update))
 
 
-def create_token(address, name, fee):
-    query = 'insert into tokens (address, name, fee) values (?, ?, ?)'
-    return update_data(query, (address, name, fee))
+def create_token(address, name, fee, icon):
+    if icon is None:
+        query = 'insert into tokens (address, name, fee) values (?, ?, ?)'
+        return update_data(query, (address, name, fee))
+    else:
+        query = 'insert into tokens (address, name, fee, icon) values (?, ?, ?, ?)'
+        return update_data(query, (address, name, fee, icon))
 
 
 def get_token(address):
@@ -477,6 +485,7 @@ def create_base_tables():
                        "address TEXT NOT NULL UNIQUE," \
                        "name TEXT NOT NULL," \
                        "fee INTEGER NOT NULL," \
+                       "icon TEXT," \
                        "other_fee INTEGER NOT NULL DEFAULT 0)"
         cur.execute(query_tokens)
 

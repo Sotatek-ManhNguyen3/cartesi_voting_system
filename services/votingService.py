@@ -92,9 +92,11 @@ def do_user_have_enough_money(user, token, amount=None):
     return remain_amount >= amount
 
 
-def get_deposit_info_of_user(user):
-    # response exp: [{amount: number; used_amount: number; withdrawn_amount: number; contract_address: text}]
-    return {'data': get_deposit_info(user)}
+def get_user_info(user):
+    return {
+        'deposit_info': get_deposit_info(user),
+        'is_admin': len(get_role(user)) != 0
+    }
 
 
 def delete_campaign(campaign_id, user, timestamp):
