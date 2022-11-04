@@ -93,9 +93,11 @@ def do_user_have_enough_money(user, token, amount=None):
 
 
 def get_user_info(user):
+    role = get_role(user)
     return {
         'deposit_info': get_deposit_info(user),
-        'is_admin': len(get_role(user)) != 0
+        'is_admin': len(role) != 0,
+        'role': None if len(role) == 0 else role[0]
     }
 
 
