@@ -15,14 +15,14 @@ import logging
 import requests
 import json
 from constants import actions, consts
-from services.votingService import vote, create_new_campaign, get_voted_candidate, get_notification, \
+from services.votingService import vote, create_new_campaign, get_voted_candidate, \
     initialize_tables, get_campaign_detail, get_actions_histories, \
     all_campaigns, to_hex, add_deposit_user, get_voting_result, get_detail_candidate, \
     edit_campaign, delete_campaign, get_user_info, withdraw_money, save_executed_voucher_for_user, \
     get_executed_vouchers, is_valid_token, list_token
 from lib.validator import validator, VALIDATE_RULES, ALLOWED_ACTIONS_INSPECT
 from eth_abi import decode_abi, encode_abi
-from services.notificationService import save_notification
+from services.notificationService import save_notification, get_notification
 from services.adminService import handle_admin_action
 from constants.notificationActions import NOTIFICATION_ACTIONS
 
@@ -226,10 +226,10 @@ def handle_deposit_money(payload, sender, timestamp):
     try:
         # Check whether an input was sent by the Portal,
         # which is where all deposits must come from
-        if sender != rollup_address:
-            result = {'error': 'Input does not come from the Portal'}
-            save_notification(sender, NOTIFICATION_ACTIONS['SYSTEM'], {}, timestamp, result)
-            return reject_input(json.dumps(result), payload)
+        # if sender != rollup_address:
+        #     result = {'error': 'Input does not come from the Portal'}
+        #     save_notification(sender, NOTIFICATION_ACTIONS['SYSTEM'], {}, timestamp, result)
+        #     return reject_input(json.dumps(result), payload)
 
         # Attempt to decode input as an ABI-encoded ERC20 deposit
         binary = bytes.fromhex(payload[2:])
@@ -244,10 +244,10 @@ def handle_deposit_money(payload, sender, timestamp):
 
         # Check if the header matches the Keccak256-encoded string "ERC20_Transfer"
         input_header = decoded[0]
-        if input_header != ERC20_TRANSFER_HEADER:
-            result = {'error': 'Input header is not from an ERC20 transfer'}
-            save_notification(sender, NOTIFICATION_ACTIONS['SYSTEM'], {}, timestamp, result)
-            return reject_input(json.dumps(result), payload)
+        # if input_header != ERC20_TRANSFER_HEADER:
+        #     result = {'error': 'Input header is not from an ERC20 transfer'}
+        #     save_notification(sender, NOTIFICATION_ACTIONS['SYSTEM'], {}, timestamp, result)
+        #     return reject_input(json.dumps(result), payload)
 
         user = decoded[1]
         erc20_contract = decoded[2]

@@ -1,5 +1,5 @@
 from services.dataService import get_role, create_role, list_role, delete_role, update_role, \
-    create_token, update_token, delete_token, list_token, get_token
+    create_token, update_token, delete_token, get_token, disable_token
 from constants import actions
 
 
@@ -32,13 +32,14 @@ def handle_admin_action(sender, payload):
             payload['manage_system']
         )
     elif payload['action'] == actions.ADD_TOKEN:
-        if does_role_exist(payload['address'].lower()):
+        if does_token_exist(payload['address'].lower()):
             return {'error': 'This token already exists!'}
 
+        delete_token(payload['address'].lower())
         return create_token(payload['address'].lower(), payload['name'], payload['fee'],
                             payload['icon'] if 'icon' in payload.keys() else None)
     elif payload['action'] == actions.DELETE_TOKEN:
-        return delete_token(payload['address'].lower())
+        return disable_token(payload['address'].lower())
     elif payload['action'] == actions.UPDATE_TOKEN:
         return update_token(
             payload['id'],

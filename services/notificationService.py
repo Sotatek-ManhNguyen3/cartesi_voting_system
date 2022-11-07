@@ -47,3 +47,20 @@ def save_notification(user, action, request, timestamp, response):
 
     save_notification_data(user, action, json.dumps(payload), str(time), 'error' if is_error else 'success')
     remove_notification_data(user)
+
+
+def get_notification(user, page, limit):
+    data = fetch_notifications(user, page, limit)
+
+    result = []
+    for notification in data['data']:
+        print(notification)
+        payload = json.loads(notification['payload'])
+        if 'token' in payload.keys():
+            token_info = get_token(payload['token'], None)
+            payload['token'] = payload['token'] if len(token_info) == 0 else token_info[0]
+
+        notification['payload'] = json.dumps(payload)
+        result.append(notification)
+
+    return data

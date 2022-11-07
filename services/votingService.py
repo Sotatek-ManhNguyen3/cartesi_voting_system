@@ -20,10 +20,6 @@ def get_fee(token_address):
     return token[0]['fee']
 
 
-def get_notification(user, page, limit):
-    return get_notifications_data(user, page, limit)
-
-
 def get_actions_histories(user, page, limit, action='all'):
     if not (action == 'all' or action in ACTIONS.keys()):
         return {'error': 'Invalid action'}
@@ -198,7 +194,8 @@ def vote(user, candidate_id, campaign_id, token_address, timestamp):
     # Validate money
     have_enough_money = do_user_have_enough_money(user, token_address)
     if not have_enough_money:
-        return {'error': f'You do not have enough coin to vote! You need at least {get_fee(token_address)} unused coin!'}
+        return {'error': f'You do not have enough coin to vote! '
+                         f'You need at least {get_fee(token_address)} unused coin!'}
 
     # Vote
     result = vote_candidate(user, candidate_id, campaign_id)
@@ -237,7 +234,8 @@ def create_new_campaign(creator, payload, timestamp, token_address):
         # Validate money
         have_enough_money = do_user_have_enough_money(creator, token_address)
         if not have_enough_money:
-            return {'error': f'You do not have enough coin to vote! You need at least {get_fee(token_address)} unused coin!'}
+            return {'error': f'You do not have enough coin to vote! '
+                             f'You need at least {get_fee(token_address)} unused coin!'}
 
         campaign = create_campaign(creator, payload['description'],
                                    payload['start_time'], payload['end_time'], payload['name'])

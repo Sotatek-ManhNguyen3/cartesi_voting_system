@@ -15,6 +15,11 @@ def delete_token(address):
     return update_data(query, (address,))
 
 
+def disable_token(address):
+    query = 'update tokens set is_disabled = 1 where address = ?'
+    return update_data(query, (address,))
+
+
 def update_token(id_update, address, name, fee, icon):
     if icon is None:
         query = 'update tokens set address = ?, name = ?, fee = ? where id = ?'
@@ -33,9 +38,13 @@ def create_token(address, name, fee, icon):
         return update_data(query, (address, name, fee, icon))
 
 
-def get_token(address):
-    query = 'select * from tokens where address = ? limit 1'
-    return select_data(query, (address,))
+def get_token(address, is_disabled=0):
+    if is_disabled is None:
+        query = 'select * from tokens where address = ? limit 1'
+        return select_data(query, (address,))
+    else:
+        query = 'select * from tokens where address = ? and is_disabled = ? limit 1'
+        return select_data(query, (address, is_disabled))
 
 
 def update_role(id_update, user, manage_user, manage_token, manage_post, manage_system):
@@ -82,7 +91,7 @@ def remove_notification_data(user):
     return update_data(query, (user, id_need_delete))
 
 
-def get_notifications_data(user, page, limit):
+def fetch_notifications(user, page, limit):
     query_data = 'select * from notifications where user = ? order by id desc limit ? offset ?'
     query_total = 'select count(*) as total from notifications where user = ?'
     return {
@@ -486,7 +495,8 @@ def create_base_tables():
                        "name TEXT NOT NULL," \
                        "fee INTEGER NOT NULL," \
                        "icon TEXT," \
-                       "other_fee INTEGER NOT NULL DEFAULT 0)"
+                       "other_fee INTEGER NOT NULL DEFAULT 0," \
+                       "is_disabled INTEGER NOT NULL DEFAULT 0)"
         cur.execute(query_tokens)
 
         campaign = create_campaign(

@@ -26,6 +26,10 @@ def format_action_histories(data):
             if len(campaign_detail) != 0:
                 payload['campaign'] = campaign_detail[0]
 
+        if 'token' in payload.keys():
+            token_info = get_token(payload['token'], None)
+            payload['token'] = token_info[0]
+
         log['payload'] = payload
         log.pop('id', None)
         log.pop('user', None)
