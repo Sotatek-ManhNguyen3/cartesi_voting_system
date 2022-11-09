@@ -62,7 +62,7 @@ def withdraw_money(user, amount, timestamp, token):
     # Log withdraw money
     log_action(user, ACTIONS['WITHDRAW'], {
         'amount': amount,
-        'toke': token,
+        'token': token,
         'time': str(datetime.datetime.fromtimestamp(timestamp))
     }, timestamp)
 
