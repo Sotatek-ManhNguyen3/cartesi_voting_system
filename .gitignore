@@ -1,4 +1,5 @@
 .env
 .idea
+deployments
 *.db
 **/__pycache__/
