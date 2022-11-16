@@ -3,6 +3,13 @@ import json
 from constants import metadata
 from services.connection import *
 from services.sampleData import CANDIDATES
+from lib.helpers import get_now_str
+
+
+def count_active_campaign_by_token(token):
+    now = get_now_str()
+    query = 'select count(*) as count from campaign where accept_token = ? and end_time > ?'
+    return select_data(query, (token, now))
 
 
 def list_token():
@@ -15,36 +22,40 @@ def delete_token(address):
     return update_data(query, (address,))
 
 
-def disable_token(address):
-    query = 'update tokens set is_disabled = 1 where address = ?'
-    return update_data(query, (address,))
+def change_status_token(address, status):
+    query = 'update tokens set status = ? where address = ?'
+    return update_data(query, (status, address))
 
 
-def update_token(id_update, address, name, fee, icon):
-    if icon is None:
-        query = 'update tokens set address = ?, name = ?, fee = ? where id = ?'
-        return update_data(query, (address, name, fee, id_update))
-    else:
-        query = 'update tokens set address = ?, name = ?, fee = ?, icon = ? where id = ?'
-        return update_data(query, (address, name, fee, icon, id_update))
+def update_token(id_update, address, name, fee, icon, status, can_vote, can_create_campaign):
+    status = 1 if status is None else status
+    can_vote = 1 if can_vote is None else can_vote
+    can_create_campaign = 0 if can_create_campaign is None else can_create_campaign
+    icon = '' if icon is None else icon
+    query = 'update tokens ' \
+            'set address = ?, name = ?, fee = ?, icon = ?, status = ?, can_vote = ?, can_create_campaign = ? ' \
+            'where id = ?'
+    return update_data(query, (address, name, fee, icon, status, can_vote, can_create_campaign, id_update))
 
 
-def create_token(address, name, fee, icon):
-    if icon is None:
-        query = 'insert into tokens (address, name, fee) values (?, ?, ?)'
-        return update_data(query, (address, name, fee))
-    else:
-        query = 'insert into tokens (address, name, fee, icon) values (?, ?, ?, ?)'
-        return update_data(query, (address, name, fee, icon))
+def create_token(address, name, fee, icon, status, can_vote, can_create_campaign):
+    status = 1 if status is None else status
+    can_vote = 1 if can_vote is None else can_vote
+    can_create_campaign = 0 if can_create_campaign is None else can_create_campaign
+    icon = '' if icon is None else icon
+
+    query = 'insert into tokens (address, name, fee, icon, status, can_vote, can_create_campaign)' \
+            ' values (?, ?, ?, ?, ?, ?, ?)'
+    return update_data(query, (address, name, fee, icon, status, can_vote, can_create_campaign))
 
 
-def get_token(address, is_disabled=0):
-    if is_disabled is None:
+def get_token(address, status=0):
+    if status is None:
         query = 'select * from tokens where address = ? limit 1'
         return select_data(query, (address,))
     else:
-        query = 'select * from tokens where address = ? and is_disabled = ? limit 1'
-        return select_data(query, (address, is_disabled))
+        query = 'select * from tokens where address = ? and status = ? limit 1'
+        return select_data(query, (address, status))
 
 
 def update_role(id_update, user, manage_user, manage_token, manage_post, manage_system):
@@ -288,9 +299,10 @@ def add_candidates(list_candidate):
     return insert_multiple_data(query, list_candidate)
 
 
-def create_campaign(creator, description, start_time, end_time, name):
-    query = 'insert into campaigns (creator, name, description, start_time, end_time) values (?, ?, ?, ?, ?);'
-    result = insert_data(query, (creator, name, description, start_time, end_time))
+def create_campaign(creator, description, start_time, end_time, name, accept_token, fee):
+    query = 'insert into campaigns (creator, name, description, start_time, end_time, accept_token, fee) ' \
+            'values (?, ?, ?, ?, ?, ?, ?);'
+    result = insert_data(query, (creator, name, description, start_time, end_time, accept_token, fee))
     if 'error' in result.keys():
         return result
     else:
@@ -401,7 +413,9 @@ def create_base_tables():
                                "name TEXT NOT NULL," \
                                "description TEXT," \
                                "start_time TEXT NOT NULL," \
-                               "end_time TEXT NOT NULL);"
+                               "end_time TEXT NOT NULL," \
+                               "accept_token TEXT NOT NULL," \
+                               "fee INTEGER NOT NULL DEFAULT 0);"
         cur.execute(query_campaign_table)
 
         query_candidates_table = "CREATE TABLE candidates(" \
@@ -493,10 +507,11 @@ def create_base_tables():
                        "id INTEGER PRIMARY KEY AUTOINCREMENT," \
                        "address TEXT NOT NULL UNIQUE," \
                        "name TEXT NOT NULL," \
-                       "fee INTEGER NOT NULL," \
+                       "fee INTEGER," \
                        "icon TEXT," \
-                       "other_fee INTEGER NOT NULL DEFAULT 0," \
-                       "is_disabled INTEGER NOT NULL DEFAULT 0)"
+                       "status INTEGER NOT NULL DEFAULT 1," \
+                       "can_vote INTEGER DEFAULT 1," \
+                       "can_create_campaign INTEGER DEFAULT 0)"
         cur.execute(query_tokens)
 
         campaign = create_campaign(
@@ -504,7 +519,9 @@ def create_base_tables():
             'This is the default campaign of the system.',
             "2000-01-01 00:00:00",
             "2099-01-01 00:00:00",
-            "Which is the most favorite coin?"
+            "Which is the most favorite coin?",
+            "0x610178da211fef7d417bc0e6fed39f05609ad788",
+            10
         )
 
         query = []

@@ -1,6 +1,7 @@
 from services.dataService import get_role, create_role, list_role, delete_role, update_role, \
-    create_token, update_token, delete_token, get_token, disable_token
+    create_token, update_token, delete_token, get_token, change_status_token, count_active_campaign_by_token
 from constants import actions
+from constants.consts import STATUS_TOKEN
 
 
 def handle_admin_action(sender, payload):
@@ -35,18 +36,40 @@ def handle_admin_action(sender, payload):
         if does_token_exist(payload['address'].lower()):
             return {'error': 'This token already exists!'}
 
+        status = payload['status'] if 'status' in payload.keys() else None
+
+        if status not in [STATUS_TOKEN['ACTIVE'], STATUS_TOKEN['LOCKED']]:
+            return {'error': 'Invalid token status'}
+
         delete_token(payload['address'].lower())
-        return create_token(payload['address'].lower(), payload['name'], payload['fee'],
-                            payload['icon'] if 'icon' in payload.keys() else None)
+        return create_token(
+            payload['address'].lower(),
+            payload['name'],
+            payload['fee'] if 'fee' in payload.keys() else None,
+            payload['icon'] if 'icon' in payload.keys() else None,
+            status,
+            payload['can_vote'] if 'can_vote' in payload.keys() else None,
+            payload['can_create_campaign'] if 'can_create_campaign' in payload.keys() else None,
+        )
     elif payload['action'] == actions.DELETE_TOKEN:
-        return disable_token(payload['address'].lower())
+        if not can_delete_token(payload['address'].lower()):
+            return {'error': 'There are on going campaigns using this token. '
+                             'You can lock this token until all the campaigns using this token are ended!'}
+        return change_status_token(payload['address'].lower(), STATUS_TOKEN['DISABLED'])
     elif payload['action'] == actions.UPDATE_TOKEN:
+        status = payload['status'] if 'status' in payload.keys() else None
+        if status not in [STATUS_TOKEN['ACTIVE'], STATUS_TOKEN['LOCKED']]:
+            return {'error': 'Invalid token status'}
+
         return update_token(
             payload['id'],
             payload['address'].lower(),
             payload['name'],
-            payload['fee'],
-            payload['icon'] if 'icon' in payload.keys() else None
+            payload['fee'] if 'fee' in payload.keys() else None,
+            payload['icon'] if 'icon' in payload.keys() else None,
+            status,
+            payload['can_vote'] if 'can_vote' in payload.keys() else None,
+            payload['can_create_campaign'] if 'can_create_campaign' in payload.keys() else None,
         )
     else:
         return {'error': 'No action founded'}
@@ -60,6 +83,11 @@ def does_role_exist(user):
 def does_token_exist(token):
     token = get_token(token)
     return len(token) != 0
+
+
+def can_delete_token(token):
+    count = count_active_campaign_by_token(token)[0]['count']
+    return count == 0
 
 
 def can_execute_action(action, user):

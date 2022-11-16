@@ -23,11 +23,18 @@ def validator(variable, rules):
                 print('NOTICE EXCEPTION' + e.__str__())
                 return {'error': 'Invalid datetime format ' + key}
 
+        if rules[key]['type'] == 'number' and is_number(data):
+            continue
+
         if type(data).__name__ != rules[key]['type']:
             return {'error': 'Invalid type of ' + key
                              + '. It must be ' + rules[key]['type'] + '. ' + type(data).__name__ + ' given!'}
 
     return {'message': 'passed'}
+
+
+def is_number(variable):
+    return type(variable).__name__ in ['int', 'float']
 
 
 VALIDATE_RULES = {
@@ -269,12 +276,24 @@ VALIDATE_RULES = {
             'nullable': False
         },
         'fee': {
-            'type': 'float',
+            'type': 'number',
             'nullable': False
         },
         'icon': {
             'type': 'str',
             'nullable': True,
+        },
+        'status': {
+            'type': 'int',
+            'nullable': True,
+        },
+        'can_vote': {
+            'type': 'int',
+            'nullable': False,
+        },
+        'can_create_campaign': {
+            'type': 'int',
+            'nullable': False,
         }
     },
     actions.LIST_TOKEN: {},
