@@ -7,6 +7,11 @@ from services.sampleData import CANDIDATES
 from lib.helpers import get_now_str
 
 
+def backup_table(table):
+    query = f'select * from {table}'
+    return select_data(query, ())
+
+
 def count_active_campaign_by_token(token):
     now = get_now_str()
     query = 'select count(*) as count from campaign where accept_token = ? and end_time > ?'
@@ -382,7 +387,7 @@ def select_data(query, data):
             result = cur.execute(query, data)
             return result.fetchall()
     except Exception as e:
-        result = "EXCEPTION: " + e.__str__()
+        result = {'error': "EXCEPTION: " + e.__str__()}
         print("NOTICE EXCEPTION" + e.__str__())
         return result
 

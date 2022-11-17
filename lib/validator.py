@@ -333,6 +333,12 @@ VALIDATE_RULES = {
             'nullable': False
         }
     },
+    actions.BACKUP: {
+        'table': {
+            'type': 'str',
+            'nullable': False
+        }
+    }
 }
 
 ALLOWED_ACTIONS_INSPECT = [

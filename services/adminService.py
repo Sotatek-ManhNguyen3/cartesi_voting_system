@@ -1,7 +1,9 @@
 from services.dataService import get_role, create_role, list_role, delete_role, update_role, \
-    create_token, update_token, delete_token, get_token, change_status_token, count_active_campaign_by_token
+    create_token, update_token, delete_token, get_token, change_status_token, count_active_campaign_by_token, \
+    backup_table
 from constants import actions
 from constants.consts import STATUS_TOKEN
+import json
 
 
 def handle_admin_action(sender, payload):
@@ -71,6 +73,12 @@ def handle_admin_action(sender, payload):
             payload['can_vote'] if 'can_vote' in payload.keys() else None,
             payload['can_create_campaign'] if 'can_create_campaign' in payload.keys() else None,
         )
+    elif payload['action'] == actions.BACKUP:
+        res = backup_table(payload['table'])
+        if type(res).__name__ == 'dict':
+            return res
+
+        return {'data': list(map(lambda row: json.dumps(row), res))}
     else:
         return {'error': 'No action founded'}
 
@@ -100,7 +108,7 @@ def can_execute_action(action, user):
         return role['manage_user'] == 1
     elif action in [actions.ADD_TOKEN, actions.DELETE_TOKEN, actions.UPDATE_TOKEN]:
         return role['manage_token'] == 1
-    elif action in [actions.LIST_ROLE, actions.LIST_TOKEN]:
+    elif action in [actions.LIST_ROLE, actions.LIST_TOKEN, actions.BACKUP]:
         return True
     else:
         return False
