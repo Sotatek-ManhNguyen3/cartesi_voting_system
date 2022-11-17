@@ -138,7 +138,6 @@ def action_proxy(data, is_inspect=False):
             user,
             payload['candidate_id'],
             payload['campaign_id'],
-            payload['token_address'].lower(),
             timestamp
         )
     elif payload['action'] == actions.CREATE_CAMPAIGN:

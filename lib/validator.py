@@ -58,10 +58,6 @@ VALIDATE_RULES = {
         'campaign_id': {
             'type': 'int',
             'nullable': False
-        },
-        'token_address': {
-            'type': 'str',
-            'nullable': False
         }
     },
     actions.CREATE_CAMPAIGN: {
@@ -87,6 +83,14 @@ VALIDATE_RULES = {
         },
         'token_address': {
             'type': 'str',
+            'nullable': False
+        },
+        'accept_token': {
+            'type': 'str',
+            'nullable': False
+        },
+        'fee': {
+            'type': 'number',
             'nullable': False
         }
     },
@@ -148,6 +152,14 @@ VALIDATE_RULES = {
         'candidates': {
             'type': 'list',
             'nullable': False
+        },
+        'accept_token': {
+            'type': 'str',
+            'nullable': False
+        },
+        'fee': {
+            'type': 'number',
+            'nullable': False
         }
     },
     actions.DELETE_CAMPAIGN: {
@@ -173,7 +185,7 @@ VALIDATE_RULES = {
             'nullable': False
         },
         'amount': {
-            'type': 'int',
+            'type': 'number',
             'nullable': False
         },
         'token_address': {
@@ -313,7 +325,7 @@ VALIDATE_RULES = {
             'nullable': False
         },
         'fee': {
-            'type': 'float',
+            'type': 'number',
             'nullable': False
         },
         'id': {

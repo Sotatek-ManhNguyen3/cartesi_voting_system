@@ -1,6 +1,7 @@
 import datetime
 import json
 from constants import metadata
+from constants.consts import STATUS_TOKEN
 from services.connection import *
 from services.sampleData import CANDIDATES
 from lib.helpers import get_now_str
@@ -10,6 +11,16 @@ def count_active_campaign_by_token(token):
     now = get_now_str()
     query = 'select count(*) as count from campaign where accept_token = ? and end_time > ?'
     return select_data(query, (token, now))
+
+
+def check_token_can_vote(token):
+    query = f'select * from tokens where address = ? and status != {STATUS_TOKEN["DISABLED"]}'
+    return select_data(query, (token,))
+
+
+def check_token_can_create_campaign(token):
+    query = f'select * from tokens where address = ? and can_create_campaign = 1 and status = {STATUS_TOKEN["ACTIVE"]}'
+    return select_data(query, (token,))
 
 
 def list_token():
@@ -49,7 +60,7 @@ def create_token(address, name, fee, icon, status, can_vote, can_create_campaign
     return update_data(query, (address, name, fee, icon, status, can_vote, can_create_campaign))
 
 
-def get_token(address, status=0):
+def get_token(address, status=STATUS_TOKEN['ACTIVE']):
     if status is None:
         query = 'select * from tokens where address = ? limit 1'
         return select_data(query, (address,))
@@ -228,9 +239,11 @@ def delete_voting_of_candidate(candidate_id, campaign_id):
     return update_data(query, (candidate_id, campaign_id))
 
 
-def update_campaign_info(campaign_id, name, description, start_time, end_time):
-    query = 'update campaigns set name = ?, description = ?, start_time = ?, end_time = ? where id = ?'
-    return update_data(query, (name, description, start_time, end_time, campaign_id))
+def update_campaign_info(campaign_id, name, description, start_time, end_time, accept_token, fee):
+    query = 'update campaigns ' \
+            'set name = ?, description = ?, start_time = ?, end_time = ?, accept_token = ?, fee = ? ' \
+            'where id = ?'
+    return update_data(query, (name, description, start_time, end_time, accept_token, fee, campaign_id))
 
 
 def update_time_campaign(campaign_id, start_time, end_time):

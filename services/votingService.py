@@ -12,8 +12,8 @@ def is_valid_token(token_address):
     return len(token) != 0
 
 
-def get_fee(token_address):
-    token = get_token(token_address)
+def get_fee(token_address, status=STATUS_TOKEN['ACTIVE']):
+    token = get_token(token_address, status)
     if len(token) == 0:
         return metadata.DEFAULT_FEE_IN_SYSTEM
 
@@ -159,10 +159,7 @@ def add_deposit_user(user, amount, token, timestamp):
 # Only user with free coin greater than the config fee can vote
 # User can only vote for 1 candidate per 1 campaign
 # Can not vote if the time vote is not in the acceptable time range
-def vote(user, candidate_id, campaign_id, token_address, timestamp):
-    if not is_valid_token(token_address):
-        return {'error': 'Token is invalid'}
-
+def vote(user, candidate_id, campaign_id, timestamp):
     # Validate campaign and valid time to vote
     campaign = get_campaign(campaign_id)
 
@@ -175,6 +172,9 @@ def vote(user, candidate_id, campaign_id, token_address, timestamp):
         return {'error': 'You need to deposit to the system before voting!'}
 
     campaign = campaign[0]
+    token_address = campaign['accept_token']
+    fee = campaign['fee']
+
     start_time = get_date_time_from_string(campaign['start_time'])
     end_time = get_date_time_from_string(campaign['end_time'])
     now = datetime.datetime.fromtimestamp(timestamp)
@@ -192,10 +192,10 @@ def vote(user, candidate_id, campaign_id, token_address, timestamp):
         return {'error': 'You can only vote for one candidate'}
 
     # Validate money
-    have_enough_money = do_user_have_enough_money(user, token_address)
+    have_enough_money = do_user_have_enough_money(user, token_address, fee)
     if not have_enough_money:
         return {'error': f'You do not have enough coin to vote! '
-                         f'You need at least {get_fee(token_address)} unused coin!'}
+                         f'You need at least {fee} unused coin!'}
 
     # Vote
     result = vote_candidate(user, candidate_id, campaign_id)
@@ -209,10 +209,10 @@ def vote(user, candidate_id, campaign_id, token_address, timestamp):
         'time': str(now)
     }, timestamp)
 
-    deduct_money_from_user(user, token_address, get_fee(token_address))
+    deduct_money_from_user(user, token_address, fee)
     # Log deduct money
     log_action(user, ACTIONS['DECREASE_TOKEN'], {
-        'amount': get_fee(token_address),
+        'amount': fee,
         'token': token_address,
         'time': str(datetime.datetime.fromtimestamp(timestamp)),
         'reason': 'you voted for a candidate'
@@ -225,20 +225,31 @@ def vote(user, candidate_id, campaign_id, token_address, timestamp):
 # Create new campaign
 def create_new_campaign(creator, payload, timestamp, token_address):
     try:
-        if not is_valid_token(token_address):
-            return {'error': 'Token is invalid'}
+        if not can_use_token_to_create_campaign(token_address):
+            return {'error': f'Can not use token {token_address} to create campaign!'}
+
+        if not can_use_token_to_vote(payload['accept_token']):
+            return {'error': f'Can not use token {payload["accept_token"]} to vote!'}
 
         if type(payload['candidates']) is not list:
             return {'error': 'Wrong input format'}
 
         # Validate money
-        have_enough_money = do_user_have_enough_money(creator, token_address)
+        create_fee = get_fee(token_address, None)
+        have_enough_money = do_user_have_enough_money(creator, token_address, create_fee)
         if not have_enough_money:
             return {'error': f'You do not have enough coin to vote! '
-                             f'You need at least {get_fee(token_address)} unused coin!'}
+                             f'You need at least {create_fee} unused coin!'}
 
-        campaign = create_campaign(creator, payload['description'],
-                                   payload['start_time'], payload['end_time'], payload['name'])
+        campaign = create_campaign(
+            creator,
+            payload['description'],
+            payload['start_time'],
+            payload['end_time'],
+            payload['name'],
+            payload['accept_token'],
+            payload['fee']
+        )
 
         if 'error' in campaign.keys():
             return {'error': campaign}
@@ -260,11 +271,11 @@ def create_new_campaign(creator, payload, timestamp, token_address):
             'time': str(datetime.datetime.fromtimestamp(timestamp))
         }, timestamp)
 
-        deduct_money_from_user(creator, token_address, get_fee(token_address))
+        deduct_money_from_user(creator, token_address, create_fee)
 
         # Log deduct money
         log_action(creator, ACTIONS['DECREASE_TOKEN'], {
-            'amount': get_fee(token_address),
+            'amount': create_fee,
             'token': token_address,
             'time': str(datetime.datetime.fromtimestamp(timestamp)),
             'reason': 'create campaign'
@@ -275,6 +286,16 @@ def create_new_campaign(creator, payload, timestamp, token_address):
         result = "EXCEPTION: " + e.__str__()
         print("NOTICE EXCEPTION" + e.__str__())
         return {'error': result}
+
+
+def can_use_token_to_vote(token):
+    token = check_token_can_vote(token)
+    return len(token) != 0
+
+
+def can_use_token_to_create_campaign(token):
+    token = check_token_can_create_campaign(token)
+    return len(token) != 0
 
 
 # Get voted candidate for a campaign
@@ -291,13 +312,20 @@ def get_voted_candidate(user, campaign_id):
 # Only the creator of the campaign can edit
 # Can not edit campaign info if the campaign is running
 def edit_campaign(user_change, campaign_id, timestamp, payload):
-    can_change_campaign = can_change_campaign_info(user_change, campaign_id, timestamp)
+    can_change_campaign = can_change_campaign_info(user_change, campaign_id, timestamp, payload['accept_token'])
 
     if 'error' in can_change_campaign.keys():
         return can_change_campaign
 
-    update_campaign_info(campaign_id, payload['name'], payload['description'], payload['start_time'],
-                         payload['end_time'])
+    update_campaign_info(
+        campaign_id,
+        payload['name'],
+        payload['description'],
+        payload['start_time'],
+        payload['end_time'],
+        payload['accept_token'],
+        payload['fee']
+    )
     delete_all_candidates_of_campaign(campaign_id)
     add_candidates_to_database(campaign_id, payload['candidates'])
 
@@ -310,13 +338,16 @@ def edit_campaign(user_change, campaign_id, timestamp, payload):
     return {'message': 'Update campaign successfully'}
 
 
-def can_change_campaign_info(user_change, campaign_id, timestamp):
+def can_change_campaign_info(user_change, campaign_id, timestamp, accept_token):
     campaign = get_campaign(campaign_id)
     if len(campaign) == 0:
         return {'error': 'Campaign does not exist!'}
 
     if campaign[0]['creator'] != user_change:
         return {'error': 'You do not have the permission!'}
+
+    if not can_use_token_to_vote(accept_token):
+        return {'error': f'Can not use token {accept_token} to vote!'}
 
     # If the campaign is already started, then user can not change the campaign info
     start_time = get_date_time_from_string(campaign[0]['start_time'])
