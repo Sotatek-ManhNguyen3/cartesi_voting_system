@@ -69,6 +69,11 @@ def get_token(address, status=STATUS_TOKEN['ACTIVE']):
         return select_data(query, (address, status))
 
 
+def get_token_can_deposit(address):
+    query = f'select * from tokens where address = ? and status != {STATUS_TOKEN["DISABLED"]}'
+    return select_data(query, (address,))
+
+
 def update_role(id_update, user, manage_user, manage_token, manage_post, manage_system):
     query = 'update roles set user = ?, manage_user = ?, manage_token = ?, manage_post = ?, manage_system = ? ' \
             'where id = ?'

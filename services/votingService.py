@@ -7,8 +7,8 @@ from constants import metadata
 BASE_AMOUNT = 1000000000000000000
 
 
-def is_valid_token(token_address):
-    token = get_token(token_address)
+def can_deposit_token(token_address):
+    token = get_token_can_deposit(token_address)
     return len(token) != 0
 
 

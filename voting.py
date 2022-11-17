@@ -19,7 +19,7 @@ from services.votingService import vote, create_new_campaign, get_voted_candidat
     initialize_tables, get_campaign_detail, get_actions_histories, \
     all_campaigns, to_hex, add_deposit_user, get_voting_result, get_detail_candidate, \
     edit_campaign, delete_campaign, get_user_info, withdraw_money, save_executed_voucher_for_user, \
-    get_executed_vouchers, is_valid_token, list_token
+    get_executed_vouchers, can_deposit_token, list_token
 from lib.validator import validator, VALIDATE_RULES, ALLOWED_ACTIONS_INSPECT
 from eth_abi import decode_abi, encode_abi
 from services.notificationService import save_notification, get_notification
@@ -255,7 +255,7 @@ def handle_deposit_money(payload, sender, timestamp):
         result = {'message': f"Deposit received from: {user}; ERC-20: {erc20_contract}; Amount: {amount}"}
         print(f"Adding notice: {json.dumps(result)}")
 
-        if not is_valid_token(erc20_contract):
+        if not can_deposit_token(erc20_contract):
             print(f"Token is not acceptable, sending them back")
             handle_withdraw_money(user, amount, erc20_contract)
             result = {'error': "Token is not acceptable, we are sending them back to you as voucher!"}
