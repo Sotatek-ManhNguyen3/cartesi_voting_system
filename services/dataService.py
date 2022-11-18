@@ -19,8 +19,8 @@ def count_active_campaign_by_token(token):
 
 
 def check_token_can_vote(token):
-    query = f'select * from tokens where address = ? and status != ? and can_vote = 1'
-    return select_data(query, (token, STATUS_TOKEN["DISABLED"]))
+    query = f'select * from tokens where address = ? and status = ? and can_vote = 1'
+    return select_data(query, (token, STATUS_TOKEN["ACTIVE"]))
 
 
 def check_token_can_create_campaign(token):
