@@ -312,10 +312,13 @@ def get_voted_candidate(user, campaign_id):
 # Only the creator of the campaign can edit
 # Can not edit campaign info if the campaign is running
 def edit_campaign(user_change, campaign_id, timestamp, payload):
-    can_change_campaign = can_change_campaign_info(user_change, campaign_id, timestamp, payload['accept_token'])
+    can_change_campaign = can_change_campaign_info(user_change, campaign_id, timestamp)
 
     if 'error' in can_change_campaign.keys():
         return can_change_campaign
+
+    if not can_use_token_to_vote(payload['accept_token']):
+        return {'error': f'Can not use token {payload["accept_token"]} to vote!'}
 
     update_campaign_info(
         campaign_id,
@@ -338,16 +341,13 @@ def edit_campaign(user_change, campaign_id, timestamp, payload):
     return {'message': 'Update campaign successfully'}
 
 
-def can_change_campaign_info(user_change, campaign_id, timestamp, accept_token):
+def can_change_campaign_info(user_change, campaign_id, timestamp):
     campaign = get_campaign(campaign_id)
     if len(campaign) == 0:
         return {'error': 'Campaign does not exist!'}
 
     if campaign[0]['creator'] != user_change:
         return {'error': 'You do not have the permission!'}
-
-    if not can_use_token_to_vote(accept_token):
-        return {'error': f'Can not use token {accept_token} to vote!'}
 
     # If the campaign is already started, then user can not change the campaign info
     start_time = get_date_time_from_string(campaign[0]['start_time'])
