@@ -353,4 +353,5 @@ ALLOWED_ACTIONS_INSPECT = [
     actions.NOTIFICATION,
     actions.LIST_TOKEN,
     actions.LIST_ROLE,
+    actions.BACKUP,
 ]

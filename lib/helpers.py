@@ -8,4 +8,4 @@ def get_date_time_from_string(time):
 
 
 def get_now_str():
-    return datetime.datetime.strftime("%Y-%m-%d %H:%M:%S")
+    return datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")

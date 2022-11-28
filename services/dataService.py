@@ -14,7 +14,7 @@ def backup_table(table):
 
 def count_active_campaign_by_token(token):
     now = get_now_str()
-    query = 'select count(*) as count from campaign where accept_token = ? and end_time > ?'
+    query = 'select count(*) as count from campaigns where accept_token = ? and end_time > ?'
     return select_data(query, (token, now))
 
 
@@ -523,7 +523,11 @@ def create_base_tables():
                       "manage_system INTEGER NOT NULL DEFAULT 1)"
         cur.execute(query_roles)
 
+        # For local
         query_create_roles = 'INSERT INTO roles (user) values ("0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266")'
+        insert_data(query_create_roles, ())
+        # For testnet
+        query_create_roles = 'INSERT INTO roles (user) values ("0x1f5bc6c2a6259d00e5447cebb3b2bc0bb7b03996")'
         insert_data(query_create_roles, ())
 
         query_tokens = "CREATE TABLE tokens(" \
@@ -543,7 +547,7 @@ def create_base_tables():
             "2000-01-01 00:00:00",
             "2099-01-01 00:00:00",
             "Which is the most favorite coin?",
-            "0x610178da211fef7d417bc0e6fed39f05609ad788",
+            metadata.CTSI_LOCAL,
             10
         )
 
