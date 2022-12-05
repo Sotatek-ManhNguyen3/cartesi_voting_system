@@ -12,6 +12,8 @@
       "services/adminService.py",
       "services/connection.py",
       "services/dataService.py",
+      "services/restoreDataService.py",
+      "restore/",
       "services/logService.py",
       "services/notificationService.py",
       "services/sampleData.py",

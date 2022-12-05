@@ -5,6 +5,7 @@ from constants.consts import STATUS_TOKEN
 from services.connection import *
 from services.sampleData import CANDIDATES
 from lib.helpers import get_now_str
+from services.restoreDataService import start_backup
 
 
 def backup_table(table):
@@ -430,6 +431,7 @@ def create_base_tables():
     tables = result.fetchall()
     if len(tables) == 0:
         print("Metadata does not exist")
+        # Table campaign
         query_campaign_table = "CREATE TABLE campaigns(" \
                                "id INTEGER PRIMARY KEY AUTOINCREMENT," \
                                "creator TEXT NOT NULL," \
@@ -441,6 +443,7 @@ def create_base_tables():
                                "fee INTEGER NOT NULL DEFAULT 0);"
         cur.execute(query_campaign_table)
 
+        # Table candidates
         query_candidates_table = "CREATE TABLE candidates(" \
                                  "id INTEGER PRIMARY KEY AUTOINCREMENT," \
                                  "name TEXT NOT NULL," \
@@ -454,6 +457,7 @@ def create_base_tables():
         query_index_candidates_campaign_id = "CREATE INDEX index_candidates_campaign_id on candidates(campaign_id)"
         cur.execute(query_index_candidates_campaign_id)
 
+        # Table voting
         query_voting_table = "CREATE TABLE voting(" \
                              "id INTEGER PRIMARY KEY AUTOINCREMENT," \
                              "candidate_id INTEGER NOT NULL," \
@@ -470,6 +474,7 @@ def create_base_tables():
         query_index_voting_user = "CREATE INDEX index_voting_user on voting(user)"
         cur.execute(query_index_voting_user)
 
+        # Table deposit
         query_deposit_table = "CREATE TABLE deposit(" \
                               "id INTEGER PRIMARY KEY AUTOINCREMENT," \
                               "user TEXT NOT NULL," \
@@ -482,6 +487,7 @@ def create_base_tables():
         query_index_deposit_user = "CREATE INDEX index_deposit_user on deposit(user)"
         cur.execute(query_index_deposit_user)
 
+        # Table executed_vouchers
         query_executed_voucher = "CREATE TABLE executed_voucher(" \
                                  "id INTEGER PRIMARY KEY AUTOINCREMENT," \
                                  "user TEXT NOT NULL," \
@@ -491,6 +497,7 @@ def create_base_tables():
         query_index_executed_voucher_user = "CREATE INDEX index_executed_voucher_user on executed_voucher(user)"
         cur.execute(query_index_executed_voucher_user)
 
+        # Table action_logs
         query_action_logs = "CREATE TABLE action_logs(" \
                             "id INTEGER PRIMARY KEY AUTOINCREMENT," \
                             "user TEXT NOT NULL," \
@@ -502,6 +509,7 @@ def create_base_tables():
         query_index_action_logs_user = "CREATE INDEX index_action_logs_user on action_logs(user)"
         cur.execute(query_index_action_logs_user)
 
+        # Table notifications
         query_notifications = "CREATE TABLE notifications(" \
                               "id INTEGER PRIMARY KEY AUTOINCREMENT," \
                               "user TEXT," \
@@ -514,6 +522,7 @@ def create_base_tables():
         query_index_notifications_user = "CREATE INDEX index_notifications_user on notifications(user)"
         cur.execute(query_index_notifications_user)
 
+        # Table roles
         query_roles = "CREATE TABLE roles(" \
                       "id INTEGER PRIMARY KEY AUTOINCREMENT," \
                       "user TEXT NOT NULL UNIQUE," \
@@ -523,13 +532,7 @@ def create_base_tables():
                       "manage_system INTEGER NOT NULL DEFAULT 1)"
         cur.execute(query_roles)
 
-        # For local
-        query_create_roles = 'INSERT INTO roles (user) values ("0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266")'
-        insert_data(query_create_roles, ())
-        # For testnet
-        query_create_roles = 'INSERT INTO roles (user) values ("0x1f5bc6c2a6259d00e5447cebb3b2bc0bb7b03996")'
-        insert_data(query_create_roles, ())
-
+        # Table tokens
         query_tokens = "CREATE TABLE tokens(" \
                        "id INTEGER PRIMARY KEY AUTOINCREMENT," \
                        "address TEXT NOT NULL UNIQUE," \
@@ -540,6 +543,19 @@ def create_base_tables():
                        "can_vote INTEGER DEFAULT 1," \
                        "can_create_campaign INTEGER DEFAULT 0)"
         cur.execute(query_tokens)
+
+        if start_backup():
+            print('Have data backup')
+            conn.commit()
+            conn.close()
+            return
+
+        # For local
+        query_create_roles = 'INSERT INTO roles (user) values ("0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266")'
+        insert_data(query_create_roles, ())
+        # For testnet
+        query_create_roles = 'INSERT INTO roles (user) values ("0x1f5bc6c2a6259d00e5447cebb3b2bc0bb7b03996")'
+        insert_data(query_create_roles, ())
 
         campaign = create_campaign(
             "0x8B39e23A121bAc9221698cD22ae7A6a80D64b1DC",
