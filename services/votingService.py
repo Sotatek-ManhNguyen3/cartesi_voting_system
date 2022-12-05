@@ -159,7 +159,7 @@ def add_deposit_user(user, amount, token, timestamp):
 # Only user with free coin greater than the config fee can vote
 # User can only vote for 1 candidate per 1 campaign
 # Can not vote if the time vote is not in the acceptable time range
-def vote(user, candidate_id, campaign_id, timestamp):
+def vote(user, candidate_id, campaign_id, timestamp, comment=None):
     # Validate campaign and valid time to vote
     campaign = get_campaign(campaign_id)
 
@@ -198,7 +198,7 @@ def vote(user, candidate_id, campaign_id, timestamp):
                          f'You need at least {fee} unused coin!'}
 
     # Vote
-    result = vote_candidate(user, candidate_id, campaign_id)
+    result = vote_candidate(user, candidate_id, campaign_id, comment)
     if 'error' in result.keys():
         return result
 
@@ -206,7 +206,8 @@ def vote(user, candidate_id, campaign_id, timestamp):
     log_action(user, ACTIONS['VOTE'], {
         'campaign': campaign,
         'candidate': candidate[0],
-        'time': str(now)
+        'time': str(now),
+        'comment': comment
     }, timestamp)
 
     deduct_money_from_user(user, token_address, fee)

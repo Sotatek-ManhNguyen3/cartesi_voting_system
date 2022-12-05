@@ -340,9 +340,22 @@ def increase_votes(candidate_id, campaign_id):
     return update_data(query, (candidate_id, campaign_id))
 
 
-def vote_candidate(user, candidate_id, campaign_id):
-    query = 'insert into voting (candidate_id, campaign_id, user, voting_time) values (?, ?, ?, ?)'
-    return update_data(query, (candidate_id, campaign_id, user, datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
+def vote_candidate(user, candidate_id, campaign_id, comment):
+    query = 'insert into voting (candidate_id, campaign_id, user, voting_time, comment) values (?, ?, ?, ?, ?)'
+    return update_data(
+        query,
+        (candidate_id, campaign_id, user, datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), comment)
+    )
+
+
+def list_voter(campaign_id, page, limit):
+    query = 'select ' \
+            'v.user, v.comment, v.voting_time, v.candidate_id, c.name, c.avatar, c.votes, c.brief_introduction ' \
+            'from voting v left join candidates c on v.candidate_id = c.id ' \
+            'where v.campaign_id = ? ' \
+            'order by voting_time desc' \
+            'limit ? offset ?'
+    return select_data(query, (campaign_id, limit, (page - 1) * limit))
 
 
 def voted_candidate(user, campaign_id):
@@ -464,12 +477,17 @@ def create_base_tables():
                              "campaign_id INTEGER NOT NULL," \
                              "user TEXT NOT NULL," \
                              "voting_time TEXT NOT NULL," \
+                             "comment TEXT," \
                              "FOREIGN KEY (candidate_id) REFERENCES candidates (id)," \
                              "FOREIGN KEY (campaign_id) REFERENCES campaigns (id))"
         cur.execute(query_voting_table)
 
         query_index_voting_campaign_id = "CREATE INDEX index_voting_campaign_id on voting(campaign_id)"
         cur.execute(query_index_voting_campaign_id)
+
+        query_index_voting_campaign_id_voting_time = \
+            "CREATE INDEX index_voting_campaign_id_voting_time on voting(campaign_id, voting_time)"
+        cur.execute(query_index_voting_campaign_id_voting_time)
 
         query_index_voting_user = "CREATE INDEX index_voting_user on voting(user)"
         cur.execute(query_index_voting_user)

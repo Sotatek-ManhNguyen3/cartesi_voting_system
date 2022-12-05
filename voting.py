@@ -19,7 +19,7 @@ from services.votingService import vote, create_new_campaign, get_voted_candidat
     initialize_tables, get_campaign_detail, get_actions_histories, \
     all_campaigns, to_hex, add_deposit_user, get_voting_result, get_detail_candidate, \
     edit_campaign, delete_campaign, get_user_info, withdraw_money, save_executed_voucher_for_user, \
-    get_executed_vouchers, can_deposit_token, list_token
+    get_executed_vouchers, can_deposit_token, list_token, list_voter
 from lib.validator import validator, VALIDATE_RULES, ALLOWED_ACTIONS_INSPECT
 from eth_abi import decode_abi, encode_abi
 from services.notificationService import save_notification, get_notification
@@ -138,7 +138,8 @@ def action_proxy(data, is_inspect=False):
             user,
             payload['candidate_id'],
             payload['campaign_id'],
-            timestamp
+            timestamp,
+            payload['comment'] if 'comment' in payload.keys() else None
         )
     elif payload['action'] == actions.CREATE_CAMPAIGN:
         result = create_new_campaign(user, payload, timestamp, payload['token_address'])
@@ -153,6 +154,8 @@ def action_proxy(data, is_inspect=False):
         )
     elif payload['action'] == actions.RESULT:
         result = get_voting_result(user, payload['campaign_id'])
+    elif payload['action'] == actions.LIST_VOTER:
+        result = list_voter(payload['id'], payload['page'], payload['limit'])
     elif payload['action'] == actions.CANDIDATE_DETAIL:
         result = get_detail_candidate(payload['campaign_id'], payload['candidate_id'])
     elif payload['action'] == actions.EDIT_CAMPAIGN:

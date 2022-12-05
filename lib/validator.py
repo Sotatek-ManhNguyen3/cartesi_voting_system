@@ -58,6 +58,10 @@ VALIDATE_RULES = {
         'campaign_id': {
             'type': 'int',
             'nullable': False
+        },
+        'comment': {
+            'type': 'str',
+            'nullable': True,
         }
     },
     actions.CREATE_CAMPAIGN: {
@@ -338,6 +342,20 @@ VALIDATE_RULES = {
             'type': 'str',
             'nullable': False
         }
+    },
+    actions.LIST_VOTER: {
+        'id': {
+            'type': 'int',
+            'nullable': False
+        },
+        'page': {
+            'type': 'int',
+            'nullable': False
+        },
+        'limit': {
+            'type': 'int',
+            'nullable': False
+        },
     }
 }
 
@@ -346,6 +364,7 @@ ALLOWED_ACTIONS_INSPECT = [
     actions.VOTED_CANDIDATE,
     actions.LIST_CAMPAIGN,
     actions.RESULT,
+    actions.LIST_VOTER,
     actions.CANDIDATE_DETAIL,
     actions.USER_INFO,
     actions.LIST_EXECUTED_VOUCHER,
