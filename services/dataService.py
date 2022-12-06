@@ -353,7 +353,7 @@ def list_voter(campaign_id, page, limit):
             'v.user, v.comment, v.voting_time, v.candidate_id, c.name, c.avatar, c.votes, c.brief_introduction ' \
             'from voting v left join candidates c on v.candidate_id = c.id ' \
             'where v.campaign_id = ? ' \
-            'order by voting_time desc' \
+            'order by voting_time desc ' \
             'limit ? offset ?'
     return select_data(query, (campaign_id, limit, (page - 1) * limit))
 
