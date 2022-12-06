@@ -7,10 +7,6 @@ from constants import metadata
 BASE_AMOUNT = 1000000000000000000
 
 
-def get_list_voter(campaign_id, page, limit):
-    return {'data': list_voter(campaign_id, page, limit)}
-
-
 def can_deposit_token(token_address):
     token = get_token_can_deposit(token_address)
     return len(token) != 0

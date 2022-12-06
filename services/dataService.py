@@ -355,7 +355,14 @@ def list_voter(campaign_id, page, limit):
             'where v.campaign_id = ? ' \
             'order by voting_time desc ' \
             'limit ? offset ?'
-    return select_data(query, (campaign_id, limit, (page - 1) * limit))
+
+    query_total = 'select count(*) total from voting where campaign_id = ?'
+    return {
+        'data': select_data(query, (campaign_id, limit, (page - 1) * limit)),
+        'page': page,
+        'limit': limit,
+        'total': select_data(query_total, (campaign_id,))[0]['total']
+    }
 
 
 def voted_candidate(user, campaign_id):
