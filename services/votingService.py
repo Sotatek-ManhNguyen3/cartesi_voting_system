@@ -93,6 +93,22 @@ def detail_profile(profile_id):
     return profile
 
 
+def get_profile_default_of_user(user):
+    profile = get_profile_default_of_user_data(user)
+
+    if profile is not None:
+        return profile
+
+    data = create_profile_data(user, user, 'Default profile', None, None, '', consts.PROFILE_TYPE['USER'])
+    return get_profile_default_of_user_data(user)
+
+
+def is_manager_of_profile(user, profile_id):
+    managers = map(lambda item: item['user'], get_managers_of_profile(profile_id))
+
+    return user in managers
+
+
 def can_deposit_token(token_address):
     token = get_token_can_deposit(token_address)
     return len(token) != 0
@@ -321,6 +337,13 @@ def create_new_campaign(creator, payload, timestamp, token_address):
         if type(payload['candidates']) is not list:
             return {'error': 'Wrong input format'}
 
+        profile_id = get_var(payload, 'profile_id')
+        if profile_id is None:
+            profile_id = get_profile_default_of_user(creator)['id']
+        else:
+            if not is_manager_of_profile(creator, profile_id):
+                return {'error': 'You dont have permission to create campaign in this profile!'}
+
         # Validate money
         create_fee = get_fee(token_address, None)
         have_enough_money = do_user_have_enough_money(creator, token_address, create_fee)
@@ -335,7 +358,8 @@ def create_new_campaign(creator, payload, timestamp, token_address):
             payload['end_time'],
             payload['name'],
             payload['accept_token'],
-            payload['fee']
+            payload['fee'],
+            profile_id
         )
 
         if 'error' in campaign.keys():

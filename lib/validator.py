@@ -96,6 +96,10 @@ VALIDATE_RULES = {
         'fee': {
             'type': 'number',
             'nullable': False
+        },
+        'profile_id': {
+            'type': 'int',
+            'nullable': True
         }
     },
     actions.RESULT: {
@@ -164,6 +168,10 @@ VALIDATE_RULES = {
         'fee': {
             'type': 'number',
             'nullable': False
+        },
+        'profile_id': {
+            'type': 'int',
+            'nullable': True
         }
     },
     actions.DELETE_CAMPAIGN: {

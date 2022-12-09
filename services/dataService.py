@@ -53,9 +53,15 @@ def list_profile_from_ids(ids):
 
 
 def list_profile_id_of_user_data(user):
-    query = f'SELECT * FROM profile_managers WHERE user = ? and type != {constants.consts.PROFILE_TYPE["USER"]}'
+    query = f'SELECT * FROM profile_managers WHERE user = ?'
     data = select_data(query, (user,))
     return map(lambda row: row['profile_id'], data)
+
+
+def get_profile_default_of_user_data(user):
+    query = f'SELECT * FROM profiles where creator = ? and type = {constants.consts.PROFILE_TYPE["USER"]}'
+    data = select_data(query, (user,))
+    return None if len(data) == 0 else data[0]
 
 
 def get_detail_profile_data(profile_id):
@@ -390,10 +396,10 @@ def add_candidates(list_candidate):
     return insert_multiple_data(query, list_candidate)
 
 
-def create_campaign(creator, description, start_time, end_time, name, accept_token, fee):
-    query = 'insert into campaigns (creator, name, description, start_time, end_time, accept_token, fee) ' \
-            'values (?, ?, ?, ?, ?, ?, ?);'
-    result = insert_data(query, (creator, name, description, start_time, end_time, accept_token, fee))
+def create_campaign(creator, description, start_time, end_time, name, accept_token, fee, profile_id):
+    query = 'insert into campaigns (creator, name, description, start_time, end_time, accept_token, fee, profile_id) ' \
+            'values (?, ?, ?, ?, ?, ?, ?, ?);'
+    result = insert_data(query, (creator, name, description, start_time, end_time, accept_token, fee, profile_id))
     if 'error' in result.keys():
         return result
     else:
@@ -523,6 +529,7 @@ def create_base_tables():
                                "id INTEGER PRIMARY KEY AUTOINCREMENT," \
                                "profile_id INTEGER NOT NULL," \
                                "name TEXT NOT NULL," \
+                               "creator TEXT NOT NULL," \
                                "description TEXT," \
                                "start_time TEXT NOT NULL," \
                                "end_time TEXT NOT NULL," \
@@ -671,6 +678,7 @@ def create_base_tables():
         query_create_roles = 'INSERT INTO roles (user) values ("0x1f5bc6c2a6259d00e5447cebb3b2bc0bb7b03996")'
         insert_data(query_create_roles, ())
 
+        # TODO: Create profile before creating campaign
         campaign = create_campaign(
             "0x8B39e23A121bAc9221698cD22ae7A6a80D64b1DC",
             'This is the default campaign of the system.',
