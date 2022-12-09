@@ -1,11 +1,78 @@
 import datetime
 import json
+
+import constants.consts
 from constants import metadata
 from constants.consts import STATUS_TOKEN
 from services.connection import *
 from services.sampleData import CANDIDATES
 from lib.helpers import get_now_str
 from services.restoreDataService import start_backup
+
+
+# ====================================== Profile ======================================
+def create_profile_data(creator, name, description, website, social_media, thumbnail, profile_type):
+    query = 'INSERT INTO profiles (name, description, website, social_media, thumbnail, creator, type) ' \
+            'values (?, ?, ?, ?, ?, ?, ?)'
+    return insert_data(query, (name, description, website, social_media, thumbnail, creator, profile_type))
+
+
+def update_profile_data(profile_id, name, description, website, social_media, thumbnail):
+    query = 'UPDATE profiles set name = ?, desciption = ?, website = ?, social_media = ?, thumbnail = ? where id = ?'
+    return update_data(query, (name, description, website, social_media, thumbnail, profile_id))
+
+
+def create_profile_managers(profile_id, managers):
+    query = 'INSERT INTO profile_managers (profile_id, user) values (?, ?)'
+    data = []
+
+    for manager in managers:
+        data.append([profile_id, manager])
+
+    return insert_multiple_data(query, data)
+
+
+def update_profile_managers(profile_id, managers):
+    delete_profile_managers(profile_id)
+    return create_profile_managers(profile_id, managers)
+
+
+def delete_profile_managers(profile_id):
+    query = 'DELETE from profile_managers where profile_id = ?'
+    return update_data(query, (profile_id,))
+
+
+def delete_profile_data(profile_id):
+    query = 'DELETE from profiles where id = ?'
+    return update_data(query, (profile_id,))
+
+
+def list_profile_from_ids(ids):
+    query = 'SELECT * FROM profiles where id in ?'
+    return select_data(query, (ids,))
+
+
+def list_profile_id_of_user_data(user):
+    query = f'SELECT * FROM profile_managers WHERE user = ? and type != {constants.consts.PROFILE_TYPE["USER"]}'
+    data = select_data(query, (user,))
+    return map(lambda row: row['profile_id'], data)
+
+
+def get_detail_profile_data(profile_id):
+    query = 'SELECT * FROM profiles WHERE id = ?'
+    profile = select_data(query, (profile_id,))
+    return profile[0] if len(profile) > 0 else None
+
+
+def get_managers_of_profile(profile_id):
+    query = 'SELECT * FROM profile_managers WHERE profile_id = ?'
+    return select_data(query, (profile_id,))
+
+
+# ====================================== Campaign ======================================
+def count_campaign_of_profile(profile_id):
+    query_count_campaign = 'SELECT count(*) as total from campaigns where profile_id = ?'
+    return select_data(query_count_campaign, (profile_id,))[0]['total']
 
 
 def backup_table(table):
@@ -454,7 +521,7 @@ def create_base_tables():
         # Table campaign
         query_campaign_table = "CREATE TABLE campaigns(" \
                                "id INTEGER PRIMARY KEY AUTOINCREMENT," \
-                               "creator TEXT NOT NULL," \
+                               "profile_id INTEGER NOT NULL," \
                                "name TEXT NOT NULL," \
                                "description TEXT," \
                                "start_time TEXT NOT NULL," \
@@ -568,6 +635,28 @@ def create_base_tables():
                        "can_vote INTEGER DEFAULT 1," \
                        "can_create_campaign INTEGER DEFAULT 0)"
         cur.execute(query_tokens)
+
+        # Table profiles
+        query_profiles = "CREATE TABLE profiles(" \
+                         "id INTEGER PRIMARY KEY AUTOINCREMENT," \
+                         "name TEXT NOT NULL," \
+                         "type INTEGER NOT NULL," \
+                         "creator TEXT," \
+                         "description TEXT NOT NULL," \
+                         "website TEXT," \
+                         "social_media TEXT," \
+                         "thumbnail TEXT)"
+        cur.execute(query_profiles)
+
+        query_index_profiles_creator = "CREATE INDEX index_profiles_creator on profiles(creator)"
+        cur.execute(query_index_profiles_creator)
+
+        # Table profile_managers
+        query_profile_managers = "CREATE TABLE profile_managers(" \
+                                 "profile_id INTEGER NOT NULL," \
+                                 "user TEXT NOT NULL," \
+                                 "UNIQUE(profile_id, user))"
+        cur.execute(query_profile_managers)
 
         if start_backup():
             print('Have data backup')

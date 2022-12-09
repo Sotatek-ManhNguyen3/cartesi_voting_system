@@ -1,10 +1,96 @@
 from constants.historyActions import ACTIONS
 from services.dataService import *
-from lib.helpers import get_date_time_from_string
+from lib.helpers import get_date_time_from_string, get_var, remove_duplicate
 from services.logService import log_action, format_action_histories
-from constants import metadata
+from constants import metadata, consts
+import json
 
 BASE_AMOUNT = 1000000000000000000
+
+
+# ============================================== Profile ==============================================
+def create_profile(user, payload):
+    res = create_profile_data(
+        user,
+        payload['name'],
+        payload['description'],
+        get_var(payload, 'website'),
+        json.dumps(get_var(payload, 'social_media')),
+        payload['thumbnail'],
+        consts.PROFILE_TYPE['ORG']
+    )
+
+    managers = [user.lower()]
+    for manager in payload['managers']:
+        managers.append(manager.lower())
+
+    create_profile_managers(res['id'], remove_duplicate(managers))
+    return res
+
+
+def update_profile(editor, profile_id, payload):
+    profile = get_detail_profile_data(profile_id)
+
+    if profile is None:
+        return {'error': 'Profile not found!'}
+
+    managers = map(lambda data: data['user'], get_managers_of_profile(profile_id))
+
+    if editor not in managers:
+        return {'error': 'You can not edit this profile'}
+
+    update_profile_data(
+        profile_id,
+        payload['name'],
+        payload['description'],
+        get_var(payload, 'website'),
+        json.dumps(get_var(payload, 'social_media')),
+        payload['thumbnail']
+    )
+
+    managers = [profile['creator'].lower()]
+    for manager in payload['managers']:
+        managers.append(manager.lower())
+
+    create_profile_managers(profile['id'], managers, remove_duplicate(managers))
+    return {'message': 'Update profile info successfully'}
+
+
+def delete_profile(user, profile_id):
+    profile = get_detail_profile_data(profile_id)
+
+    if profile is None:
+        return {'error': 'Profile not found!'}
+
+    managers = map(lambda data: data['user'], get_managers_of_profile(profile_id))
+
+    if user not in managers:
+        return {'error': 'You can not delete this profile!'}
+
+    count = count_campaign_of_profile(profile_id)
+
+    if count > 0:
+        return {'error': 'You can not delete this profile because it contains campaigns!'}
+
+    return delete_profile_data(profile_id)
+
+
+def list_profile_of_user(user):
+    profile_ids = list_profile_id_of_user_data(user)
+
+    if len(profile_ids) == 0:
+        return {'data': []}
+    return {'data': list_profile_from_ids(profile_ids)}
+
+
+def detail_profile(profile_id):
+    profile = get_detail_profile_data(profile_id)
+
+    if profile is None:
+        return {'error': 'Profile not found!'}
+
+    profile['managers'] = map(lambda data: data['user'], get_managers_of_profile(profile_id))
+    return profile
 
 
 def can_deposit_token(token_address):

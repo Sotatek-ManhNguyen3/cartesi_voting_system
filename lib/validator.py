@@ -356,6 +356,80 @@ VALIDATE_RULES = {
             'type': 'int',
             'nullable': False
         },
+    },
+    actions.CREATE_PROFILE: {
+        'name': {
+            'type': 'str',
+            'nullable': False
+        },
+        'description': {
+            'type': 'str',
+            'nullable': False
+        },
+        'website': {
+            'type': 'str',
+            'nullable': True
+        },
+        'social_media': {
+            'type': 'str',
+            'nullable': True
+        },
+        'thumbnail': {
+            'type': 'str',
+            'nullable': False
+        },
+        'managers': {
+            'type': 'list',
+            'nullable': False
+        }
+    },
+    actions.UPDATE_PROFILE: {
+        'name': {
+            'type': 'str',
+            'nullable': False
+        },
+        'description': {
+            'type': 'str',
+            'nullable': False
+        },
+        'website': {
+            'type': 'str',
+            'nullable': True
+        },
+        'social_media': {
+            'type': 'str',
+            'nullable': True
+        },
+        'thumbnail': {
+            'type': 'str',
+            'nullable': False
+        },
+        'managers': {
+            'type': 'list',
+            'nullable': False
+        },
+        'id': {
+            'type': 'int',
+            'nullable': False
+        }
+    },
+    actions.DELETE_PROFILE: {
+        'id': {
+            'type': 'int',
+            'nullable': False
+        }
+    },
+    actions.LIST_PROFILE_OF_USER: {
+        'user': {
+            'type': 'str',
+            'nullable': False
+        }
+    },
+    actions.DETAIL_PROFILE: {
+        'id': {
+            'type': 'int',
+            'nullable': False
+        }
     }
 }
 
@@ -373,4 +447,6 @@ ALLOWED_ACTIONS_INSPECT = [
     actions.LIST_TOKEN,
     actions.LIST_ROLE,
     actions.BACKUP,
+    actions.LIST_PROFILE_OF_USER,
+    actions.DETAIL_PROFILE
 ]

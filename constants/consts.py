@@ -6,3 +6,8 @@ STATUS_TOKEN = {
     'LOCKED': 2,
     'DISABLED': 0,
 }
+
+PROFILE_TYPE = {
+    'USER': 'user',
+    'ORG': 'org'
+}
