@@ -187,11 +187,11 @@ def action_proxy(data, is_inspect=False):
     elif payload['action'] == actions.LIST_TOKEN:
         result = {'data': list_token()}
     elif payload['action'] == actions.CREATE_PROFILE:
-        result = create_profile(user, payload)
+        result = create_profile(user, payload, timestamp)
     elif payload['action'] == actions.UPDATE_PROFILE:
-        result = update_profile(user, payload['id'], payload)
+        result = update_profile(user, payload['id'], payload, timestamp)
     elif payload['action'] == actions.DELETE_PROFILE:
-        result = delete_profile(user, payload['id'])
+        result = delete_profile(user, payload['id'], timestamp)
     elif payload['action'] == actions.LIST_PROFILE_OF_USER:
         result = list_profile_of_user(user)
     elif payload['action'] == actions.DETAIL_PROFILE:

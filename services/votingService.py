@@ -9,7 +9,7 @@ BASE_AMOUNT = 1000000000000000000
 
 
 # ============================================== Profile ==============================================
-def create_profile(user, payload):
+def create_profile(user, payload, timestamp):
     res = create_profile_data(
         user,
         payload['name'],
@@ -25,10 +25,17 @@ def create_profile(user, payload):
         managers.append(manager.lower())
 
     create_profile_managers(res['id'], remove_duplicate(managers))
+
+    # Log action create profile
+    log_action(user, ACTIONS['CREATE_PROFILE'], {
+        'profile': get_detail_profile_data(res['id']),
+        'time': str(datetime.datetime.fromtimestamp(timestamp))
+    }, timestamp)
+
     return res
 
 
-def update_profile(editor, profile_id, payload):
+def update_profile(editor, profile_id, payload, timestamp):
     profile = get_detail_profile_data(profile_id)
 
     if profile is None:
@@ -52,11 +59,18 @@ def update_profile(editor, profile_id, payload):
     for manager in payload['managers']:
         managers.append(manager.lower())
 
-    create_profile_managers(profile['id'], managers, remove_duplicate(managers))
+    create_profile_managers(profile['id'], remove_duplicate(managers))
+
+    # Log action update profile
+    log_action(editor, ACTIONS['UPDATE_PROFILE'], {
+        'profile': profile,
+        'time': str(datetime.datetime.fromtimestamp(timestamp))
+    }, timestamp)
+
     return {'message': 'Update profile info successfully'}
 
 
-def delete_profile(user, profile_id):
+def delete_profile(user, profile_id, timestamp):
     profile = get_detail_profile_data(profile_id)
 
     if profile is None:
@@ -71,6 +85,12 @@ def delete_profile(user, profile_id):
 
     if count > 0:
         return {'error': 'You can not delete this profile because it contains campaigns!'}
+
+    # Log action delete profile
+    log_action(user, ACTIONS['DELETE_PROFILE'], {
+        'profile': profile,
+        'time': str(datetime.datetime.fromtimestamp(timestamp))
+    }, timestamp)
 
     return delete_profile_data(profile_id)
 
