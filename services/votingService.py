@@ -219,25 +219,6 @@ def get_user_info(user):
     }
 
 
-def delete_campaign(campaign_id, user, timestamp):
-    can_delete = can_change_campaign_info(user, campaign_id, timestamp)
-
-    if 'error' in can_delete.keys():
-        return can_delete
-
-    delete_all_candidates_of_campaign(campaign_id)
-
-    # Log delete campaign
-    log_action(user, ACTIONS['DELETE_CAMPAIGN'], {
-        'campaign': get_campaign(campaign_id)[0],
-        'time': str(datetime.datetime.fromtimestamp(timestamp))
-    }, timestamp)
-
-    delete_campaign_info(campaign_id)
-
-    return {'message': 'Delete campaign successfully'}
-
-
 # Get detail of a candidate
 def get_detail_candidate(campaign_id, candidate_id):
     return {
@@ -345,6 +326,7 @@ def vote(user, candidate_id, campaign_id, timestamp, comment=None):
     return increase_votes(candidate_id, campaign_id)
 
 
+# =========================================== Campaign ===========================================
 # Create new campaign
 def create_new_campaign(creator, payload, timestamp, token_address):
     try:
@@ -419,6 +401,25 @@ def create_new_campaign(creator, payload, timestamp, token_address):
         return {'error': result}
 
 
+def delete_campaign(campaign_id, user, timestamp):
+    can_delete = can_change_campaign_info(user, campaign_id, timestamp)
+
+    if 'error' in can_delete.keys():
+        return can_delete
+
+    delete_all_candidates_of_campaign(campaign_id)
+
+    # Log delete campaign
+    log_action(user, ACTIONS['DELETE_CAMPAIGN'], {
+        'campaign': get_campaign(campaign_id)[0],
+        'time': str(datetime.datetime.fromtimestamp(timestamp))
+    }, timestamp)
+
+    delete_campaign_info(campaign_id)
+
+    return {'message': 'Delete campaign successfully'}
+
+
 def can_use_token_to_vote(token):
     token = check_token_can_vote(token)
     return len(token) != 0
@@ -440,7 +441,7 @@ def get_voted_candidate(user, campaign_id):
 
 # Edit existing campaign
 # Rules:
-# Only the creator of the campaign can edit
+# Only the managers of the profile of the campaign can edit
 # Can not edit campaign info if the campaign is running
 def edit_campaign(user_change, campaign_id, timestamp, payload):
     can_change_campaign = can_change_campaign_info(user_change, campaign_id, timestamp)
@@ -451,6 +452,14 @@ def edit_campaign(user_change, campaign_id, timestamp, payload):
     if not can_use_token_to_vote(payload['accept_token']):
         return {'error': f'Can not use token {payload["accept_token"]} to vote!'}
 
+    # Validate new profile id
+    profile_id = get_var(payload, 'profile_id')
+    if profile_id is None:
+        profile_id = get_profile_default_of_user(user_change)['id']
+    else:
+        if not is_manager_of_profile(user_change, profile_id):
+            return {'error': 'You dont have permission to create campaign in this profile!'}
+
     update_campaign_info(
         campaign_id,
         payload['name'],
@@ -460,6 +469,7 @@ def edit_campaign(user_change, campaign_id, timestamp, payload):
         payload['accept_token'],
         payload['fee']
     )
+    # Delete old candidates and recreate with new data
     delete_all_candidates_of_campaign(campaign_id)
     add_candidates_to_database(campaign_id, payload['candidates'])
 
@@ -472,6 +482,7 @@ def edit_campaign(user_change, campaign_id, timestamp, payload):
     return {'message': 'Update campaign successfully'}
 
 
+# Validate if a user can change campaign info
 def can_change_campaign_info(user_change, campaign_id, timestamp):
     campaign = get_campaign(campaign_id)
     if len(campaign) == 0:
@@ -485,6 +496,10 @@ def can_change_campaign_info(user_change, campaign_id, timestamp):
     now = datetime.datetime.fromtimestamp(timestamp)
     if now.__gt__(start_time):
         return {'error': 'You can not change the on going campaign!'}
+
+    # Validate if user_change is manager of linked profile
+    if campaign['profile_id'] not in list_profile_id_of_user_data(user_change):
+        return {'error': 'You do not have the permission!'}
 
     return {'message': True}
 
