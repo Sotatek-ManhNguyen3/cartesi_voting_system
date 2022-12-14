@@ -41,7 +41,7 @@ def update_profile(editor, profile_id, payload, timestamp):
     if profile is None:
         return {'error': 'Profile not found!'}
 
-    managers = map(lambda data: data['user'], get_managers_of_profile(profile_id))
+    managers = list(map(lambda data: data['user'], get_managers_of_profile(profile_id)))
 
     if editor not in managers:
         return {'error': 'You can not edit this profile'}
@@ -76,7 +76,7 @@ def delete_profile(user, profile_id, timestamp):
     if profile is None:
         return {'error': 'Profile not found!'}
 
-    managers = map(lambda data: data['user'], get_managers_of_profile(profile_id))
+    managers = list(map(lambda data: data['user'], get_managers_of_profile(profile_id)))
 
     if user not in managers:
         return {'error': 'You can not delete this profile!'}
@@ -109,7 +109,7 @@ def detail_profile(profile_id):
     if profile is None:
         return {'error': 'Profile not found!'}
 
-    profile['managers'] = map(lambda data: data['user'], get_managers_of_profile(profile_id))
+    profile['managers'] = list(map(lambda data: data['user'], get_managers_of_profile(profile_id)))
     return profile
 
 
@@ -124,7 +124,7 @@ def get_profile_default_of_user(user):
 
 
 def is_manager_of_profile(user, profile_id):
-    managers = map(lambda item: item['user'], get_managers_of_profile(profile_id))
+    managers = list(map(lambda item: item['user'], get_managers_of_profile(profile_id)))
 
     return user in managers
 

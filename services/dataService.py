@@ -55,7 +55,7 @@ def list_profile_from_ids(ids):
 def list_profile_id_of_user_data(user):
     query = f'SELECT * FROM profile_managers WHERE user = ?'
     data = select_data(query, (user,))
-    return map(lambda row: row['profile_id'], data)
+    return list(map(lambda row: row['profile_id'], data))
 
 
 def get_profile_default_of_user_data(user):
