@@ -679,26 +679,26 @@ def create_base_tables():
         insert_data(query_create_roles, ())
 
         # TODO: Create profile before creating campaign
-        campaign = create_campaign(
-            "0x8B39e23A121bAc9221698cD22ae7A6a80D64b1DC",
-            'This is the default campaign of the system.',
-            "2000-01-01 00:00:00",
-            "2099-01-01 00:00:00",
-            "Which is the most favorite coin?",
-            metadata.CTSI_LOCAL,
-            10
-        )
-
-        query = []
-        for candidate in CANDIDATES:
-            query.append([
-                candidate['name'],
-                campaign['id'],
-                candidate['brief_introduction'] if 'brief_introduction' in candidate.keys() else '',
-                candidate['avatar']
-            ])
-
-        add_candidates(query)
+        # campaign = create_campaign(
+        #     "0x8B39e23A121bAc9221698cD22ae7A6a80D64b1DC",
+        #     'This is the default campaign of the system.',
+        #     "2000-01-01 00:00:00",
+        #     "2099-01-01 00:00:00",
+        #     "Which is the most favorite coin?",
+        #     metadata.CTSI_LOCAL,
+        #     10
+        # )
+        #
+        # query = []
+        # for candidate in CANDIDATES:
+        #     query.append([
+        #         candidate['name'],
+        #         campaign['id'],
+        #         candidate['brief_introduction'] if 'brief_introduction' in candidate.keys() else '',
+        #         candidate['avatar']
+        #     ])
+        #
+        # add_candidates(query)
         conn.commit()
         conn.close()
     else:
