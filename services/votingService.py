@@ -95,14 +95,6 @@ def delete_profile(user, profile_id, timestamp):
     return delete_profile_data(profile_id)
 
 
-def list_profile_of_user(user):
-    profile_ids = list_profile_id_of_user_data(user)
-
-    if len(profile_ids) == 0:
-        return {'data': []}
-    return {'data': list_profile_from_ids(profile_ids)}
-
-
 def detail_profile(profile_id):
     profile = get_detail_profile_data(profile_id)
 

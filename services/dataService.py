@@ -58,6 +58,60 @@ def list_profile_id_of_user_data(user):
     return list(map(lambda row: row['profile_id'], data))
 
 
+def list_profile_of_user(user, page, limit, keyword):
+    if keyword is not None:
+        query_data = 'SELECT p.* ' \
+                     'FROM profile_managers pm INNER JOIN profiles p ON pm.user = ? AND p.id = pm.profile_id ' \
+                     'WHERE p.name like "%?%" ' \
+                     'ORDER BY p.id desc LIMIT ? OFFSET ?'
+        var_query_data = (user, keyword, limit, (page - 1) * limit)
+        query_total = 'SELECT count(*) as total ' \
+                      'FROM profile_managers pm INNER JOIN profiles p ON pm.user = ? AND p.id = pm.profile_id ' \
+                      'WHERE p.name like "%?%" '
+        var_query_total = (user, keyword)
+    else:
+        query_data = 'SELECT p.* ' \
+                     'FROM profile_managers pm JOIN profiles p ON pm.user = ? AND p.id = pm.profile_id ' \
+                     'ORDER BY p.id desc LIMIT ? OFFSET ?'
+        var_query_data = (user, limit, (page - 1) * limit)
+        query_total = 'SELECT count(*) as total FROM profile_managers WHERE user = ?'
+        var_query_total = (user,)
+
+    return query_data_pagination(
+        query_data,
+        var_query_data,
+        query_total,
+        var_query_total,
+        page,
+        limit
+    )
+
+
+def list_profile(page, limit, keyword):
+    if keyword is not None:
+        query_data = 'SELECT * ' \
+                     'FROM profile_managers ' \
+                     'WHERE name like "%?%" ' \
+                     'ORDER BY p.id desc LIMIT ? OFFSET ?'
+        var_query_data = (keyword, limit, (page - 1) * limit)
+        query_total = 'SELECT count(*) as total FROM profile_managers WHERE name like "%?%"'
+        var_query_total = (keyword,)
+    else:
+        query_data = 'SELECT * FROM profile_managers ORDER BY p.id desc LIMIT ? OFFSET ?'
+        var_query_data = (limit, (page - 1) * limit)
+        query_total = 'SELECT count(*) as total FROM profile_managers'
+        var_query_total = ()
+
+    return query_data_pagination(
+        query_data,
+        var_query_data,
+        query_total,
+        var_query_total,
+        page,
+        limit
+    )
+
+
 def get_profile_default_of_user_data(user):
     query = f'SELECT * FROM profiles where creator = ? and type = {constants.consts.PROFILE_TYPE["USER"]}'
     data = select_data(query, (user,))
@@ -453,12 +507,22 @@ def list_all_candidates(campaign_id):
     return select_data(query, (campaign_id,))
 
 
-def get_candidate(candidate_id, campaign_id):
+def get_candidate(candidate_id: int, campaign_id: int):
     query = 'select * from candidates where id=? and campaign_id=?'
     return select_data(query, (candidate_id, campaign_id))
 
 
-def update_data(query, data):
+def query_data_pagination(
+        query_data: str, var_query_data: tuple, query_total: str, var_query_total: tuple, page: int, limit: int):
+    return {
+        'data': select_data(query_data, var_query_data),
+        'page': page,
+        'limit': limit,
+        'total': select_data(query_total, var_query_total)[0]['total']
+    }
+
+
+def update_data(query: str, data: tuple):
     conn = init_conn()
 
     try:

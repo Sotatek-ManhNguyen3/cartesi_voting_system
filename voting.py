@@ -20,7 +20,7 @@ from services.votingService import vote, create_new_campaign, get_voted_candidat
     all_campaigns, to_hex, add_deposit_user, get_voting_result, get_detail_candidate, \
     edit_campaign, delete_campaign, get_user_info, withdraw_money, save_executed_voucher_for_user, \
     get_executed_vouchers, can_deposit_token, list_token, list_voter, create_profile, update_profile, \
-    delete_profile, list_profile_of_user, detail_profile
+    delete_profile, list_profile_of_user, detail_profile, list_profile
 from lib.validator import validator, VALIDATE_RULES, ALLOWED_ACTIONS_INSPECT
 from eth_abi import decode_abi, encode_abi
 from services.notificationService import save_notification, get_notification
@@ -192,8 +192,11 @@ def action_proxy(data, is_inspect=False):
         result = update_profile(user, payload['id'], payload, timestamp)
     elif payload['action'] == actions.DELETE_PROFILE:
         result = delete_profile(user, payload['id'], timestamp)
-    elif payload['action'] == actions.LIST_PROFILE_OF_USER:
-        result = list_profile_of_user(user)
+    elif payload['action'] == actions.LIST_PROFILE:
+        if payload['my_profile']:
+            result = list_profile_of_user(user, payload['page'], payload['limit'], payload['keyword'])
+        else:
+            result = list_profile(payload['page'], payload['limit'], payload['keyword'])
     elif payload['action'] == actions.DETAIL_PROFILE:
         result = detail_profile(payload['id'])
     else:

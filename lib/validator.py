@@ -427,10 +427,22 @@ VALIDATE_RULES = {
             'nullable': False
         }
     },
-    actions.LIST_PROFILE_OF_USER: {
-        'user': {
-            'type': 'str',
+    actions.LIST_PROFILE: {
+        'page': {
+            'type': 'int',
             'nullable': False
+        },
+        'limit': {
+            'type': 'int',
+            'nullable': False
+        },
+        'my_profile': {
+            'type': 'bool',
+            'nullable': False
+        },
+        'keyword': {
+            'type': 'str',
+            'nullable': True
         }
     },
     actions.DETAIL_PROFILE: {
@@ -455,6 +467,6 @@ ALLOWED_ACTIONS_INSPECT = [
     actions.LIST_TOKEN,
     actions.LIST_ROLE,
     actions.BACKUP,
-    actions.LIST_PROFILE_OF_USER,
+    actions.LIST_PROFILE,
     actions.DETAIL_PROFILE
 ]
