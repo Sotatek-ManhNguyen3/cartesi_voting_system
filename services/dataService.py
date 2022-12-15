@@ -59,7 +59,7 @@ def list_profile_id_of_user_data(user):
 
 
 def list_profile_of_user(user, page, limit, keyword):
-    if keyword is not None:
+    if keyword is not None and keyword != "":
         query_data = 'SELECT p.* ' \
                      'FROM profile_managers pm INNER JOIN profiles p ON pm.user = ? AND p.id = pm.profile_id ' \
                      'WHERE p.name like "%?%" ' \
@@ -88,18 +88,18 @@ def list_profile_of_user(user, page, limit, keyword):
 
 
 def list_profile(page, limit, keyword):
-    if keyword is not None:
+    if keyword is not None and keyword != "":
         query_data = 'SELECT * ' \
-                     'FROM profile_managers ' \
+                     'FROM profiles ' \
                      'WHERE name like "%?%" ' \
-                     'ORDER BY p.id desc LIMIT ? OFFSET ?'
+                     'ORDER BY id desc LIMIT ? OFFSET ?'
         var_query_data = (keyword, limit, (page - 1) * limit)
-        query_total = 'SELECT count(*) as total FROM profile_managers WHERE name like "%?%"'
+        query_total = 'SELECT count(*) as total FROM profiles WHERE name like "%?%"'
         var_query_total = (keyword,)
     else:
-        query_data = 'SELECT * FROM profile_managers ORDER BY p.id desc LIMIT ? OFFSET ?'
+        query_data = 'SELECT * FROM profiles ORDER BY id desc LIMIT ? OFFSET ?'
         var_query_data = (limit, (page - 1) * limit)
-        query_total = 'SELECT count(*) as total FROM profile_managers'
+        query_total = 'SELECT count(*) as total FROM profiles'
         var_query_total = ()
 
     return query_data_pagination(
