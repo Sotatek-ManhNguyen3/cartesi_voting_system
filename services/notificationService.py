@@ -44,6 +44,13 @@ def save_notification(user, action, request, timestamp, response):
     elif action == NOTIFICATION_ACTIONS['DECREASE_TOKEN']:
         payload['amount'] = request['amount'] / BASE_AMOUNT
         payload['token'] = request['token']
+    elif action == NOTIFICATION_ACTIONS['CREATE_PROFILE']:
+        if not is_error:
+            payload['profile'] = get_detail_profile_data(response['id'])
+    elif action == NOTIFICATION_ACTIONS['UPDATE_PROFILE']:
+        payload['profile'] = get_detail_profile_data(request['id'])
+    elif action == NOTIFICATION_ACTIONS['DELETE_PROFILE']:
+        payload['profile'] = get_detail_profile_data(request['id'])
 
     save_notification_data(user, action, json.dumps(payload), str(time), 'error' if is_error else 'success')
     remove_notification_data(user)
