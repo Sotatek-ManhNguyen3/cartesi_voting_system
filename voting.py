@@ -242,10 +242,10 @@ def handle_deposit_money(payload, sender, timestamp):
     try:
         # Check whether an input was sent by the Portal,
         # which is where all deposits must come from
-        if sender != rollup_address:
-            result = {'error': 'Input does not come from the Portal'}
-            save_notification(sender, NOTIFICATION_ACTIONS['SYSTEM'], {}, timestamp, result)
-            return reject_input(json.dumps(result), payload)
+        # if sender != rollup_address:
+        #     result = {'error': 'Input does not come from the Portal'}
+        #     save_notification(sender, NOTIFICATION_ACTIONS['SYSTEM'], {}, timestamp, result)
+        #     return reject_input(json.dumps(result), payload)
 
         # Attempt to decode input as an ABI-encoded ERC20 deposit
         binary = bytes.fromhex(payload[2:])
@@ -259,11 +259,11 @@ def handle_deposit_money(payload, sender, timestamp):
             return reject_input(json.dumps(result), payload)
 
         # Check if the header matches the Keccak256-encoded string "ERC20_Transfer"
-        input_header = decoded[0]
-        if input_header != ERC20_TRANSFER_HEADER:
-            result = {'error': 'Input header is not from an ERC20 transfer'}
-            save_notification(sender, NOTIFICATION_ACTIONS['SYSTEM'], {}, timestamp, result)
-            return reject_input(json.dumps(result), payload)
+        # input_header = decoded[0]
+        # if input_header != ERC20_TRANSFER_HEADER:
+        #     result = {'error': 'Input header is not from an ERC20 transfer'}
+        #     save_notification(sender, NOTIFICATION_ACTIONS['SYSTEM'], {}, timestamp, result)
+        #     return reject_input(json.dumps(result), payload)
 
         user = decoded[1]
         erc20_contract = decoded[2]
