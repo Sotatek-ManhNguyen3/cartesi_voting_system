@@ -381,11 +381,11 @@ def delete_voting_of_candidate(candidate_id, campaign_id):
     return update_data(query, (candidate_id, campaign_id))
 
 
-def update_campaign_info(campaign_id, name, description, start_time, end_time, accept_token, fee):
+def update_campaign_info(campaign_id, name, description, start_time, end_time, accept_token, fee, profile_id):
     query = 'update campaigns ' \
-            'set name = ?, description = ?, start_time = ?, end_time = ?, accept_token = ?, fee = ? ' \
+            'set name = ?, description = ?, start_time = ?, end_time = ?, accept_token = ?, fee = ?, profile_id = ? ' \
             'where id = ?'
-    return update_data(query, (name, description, start_time, end_time, accept_token, fee, campaign_id))
+    return update_data(query, (name, description, start_time, end_time, accept_token, fee, profile_id, campaign_id))
 
 
 def update_time_campaign(campaign_id, start_time, end_time):

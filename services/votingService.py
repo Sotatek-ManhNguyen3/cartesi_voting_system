@@ -112,7 +112,7 @@ def get_profile_default_of_user(user):
     if profile is not None:
         return profile
 
-    data = create_profile_data(user, user, 'Default profile', None, None, '', consts.PROFILE_TYPE['USER'])
+    create_profile_data(user, user, 'Default profile', None, None, '', consts.PROFILE_TYPE['USER'])
     return get_profile_default_of_user_data(user)
 
 
@@ -468,7 +468,8 @@ def edit_campaign(user_change, campaign_id, timestamp, payload):
         payload['start_time'],
         payload['end_time'],
         payload['accept_token'],
-        payload['fee']
+        payload['fee'],
+        profile_id
     )
     # Delete old candidates and recreate with new data
     delete_all_candidates_of_campaign(campaign_id)
