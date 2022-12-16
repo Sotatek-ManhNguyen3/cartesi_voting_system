@@ -11,6 +11,10 @@ from services.restoreDataService import start_backup
 
 
 # ====================================== Profile ======================================
+def list_campaign_of_profile(profile_id, page, limit):
+    return list_campaign(page, limit, 'ALL', None, None, False, profile_id)
+
+
 def create_profile_data(creator, name, description, website, social_media, thumbnail, profile_type):
     query = 'INSERT INTO profiles (name, description, website, social_media, thumbnail, creator, type) ' \
             'values (?, ?, ?, ?, ?, ?, ?)'
@@ -389,48 +393,54 @@ def update_time_campaign(campaign_id, start_time, end_time):
     return update_data(query, (start_time, end_time, campaign_id))
 
 
-def list_campaign(page, limit, condition, user, time, my_campaign):
-    query_my_campaign = 'and c.creator = "' + user + '" ' if my_campaign else ''
-    if condition == 'ON_GOING':
-        additional_condition = ' where start_time <= "' + str(time) + '" and end_time >= "' + str(time) + '" ' \
-                               + query_my_campaign
-    elif condition == 'FINISHED':
-        additional_condition = ' where end_time <= "' + str(time) + '" ' + query_my_campaign
-    elif condition == 'VOTED':
-        additional_condition = ' where c.id in (select campaign_id from voting where user="' + user + '") ' \
-                               + query_my_campaign
-    else:
-        additional_condition = ' where c.creator = "' + user + '" ' if my_campaign else ''
+def list_campaign(page, limit, campaign_status, user, time, my_campaign, profile_id):
+    additional_condition = ''
 
-    query = 'select c.*, stat3.name winning_candidate_name, stat3.votes votes_of_candidate,stat4.total_vote as total_vote\
+    # Query my campaign
+    if my_campaign:
+        additional_condition = f'where c.creator = "{user}" '
+
+    # Query profile
+    if profile_id is not None:
+        connect_word = 'where ' if additional_condition == '' else 'and '
+        additional_condition = additional_condition + connect_word + f'c.profile_id = {profile_id} '
+
+    # Query time of campaign
+    connect_word = 'where ' if additional_condition == '' else 'and '
+    if campaign_status == 'ON_GOING':
+        additional_condition = connect_word + f'start_time <= "{str(time)}" and end_time >= "{str(time)}" '
+    elif campaign_status == 'FINISHED':
+        additional_condition = connect_word + f'end_time <= "{str(time)}" '
+    elif campaign_status == 'VOTED':
+        additional_condition = connect_word + f'where c.id in (select campaign_id from voting where user="{user}") '
+
+    query = 'select c.*, stat3.name winning_candidate_name, \
+                stat3.votes votes_of_candidate,stat4.total_vote as total_vote, \
+                p.id as profile_id, p.name as profile_name, p.type as profile_type, \
+                p.creator as profile_creator, p.description as profile_description, \
+                p.website as profile_website, p.social_media as profile_social_media, \
+                p.thumbnail as profile_thumbnail \
                 from campaigns c\
-                left join (select *\
-                from candidates c3\
-                where id in (select max(id)\
-                from candidates c2\
-                join\
-                (select max(votes) max_vote, campaign_id\
-                from candidates\
-                    group by campaign_id) stat\
-                on c2.campaign_id = stat.campaign_id and c2.votes = stat.max_vote where c2.votes != 0\
-                group by c2.campaign_id)) stat3\
+                left join (\
+                    select *\
+                    from candidates c3\
+                    where id in (\
+                        select max(id)\
+                        from candidates c2\
+                        join (\
+                            select max(votes) max_vote, campaign_id\
+                            from candidates\
+                            group by campaign_id) stat\
+                        on c2.campaign_id = stat.campaign_id and c2.votes = stat.max_vote where c2.votes != 0\
+                        group by c2.campaign_id)) stat3\
                 on c.id = stat3.campaign_id\
                 left join (select sum(votes) as total_vote, campaign_id from candidates group by campaign_id) stat4\
-                on stat4.campaign_id = c.id\
-                ' + additional_condition + ' order by c.id DESC limit ? offset ?'
-    query_total = 'select count(*) total\
-                from campaigns c\
-                left join (select *\
-                from candidates c3\
-                where id in (select max(id)\
-                from candidates c2\
-                join\
-                (select max(votes) max_vote, campaign_id\
-                from candidates\
-                    group by campaign_id) stat\
-                on c2.campaign_id = stat.campaign_id and c2.votes = stat.max_vote\
-                group by c2.campaign_id)) stat3\
-                on c.id = stat3.campaign_id' + additional_condition
+                    on stat4.campaign_id = c.id\
+                join profiles p on c.profile_id = p.id\
+                ' + additional_condition + ' \
+                order by c.id DESC limit ? offset ?'
+    query_total = 'select count(*) total from campaigns c ' + additional_condition
+    print(query)
     result = {
         "data": select_data(query, (limit, (page - 1) * limit)),
         "page": page,
@@ -742,28 +752,45 @@ def create_base_tables():
         query_create_roles = 'INSERT INTO roles (user) values ("0x1f5bc6c2a6259d00e5447cebb3b2bc0bb7b03996")'
         insert_data(query_create_roles, ())
 
-        # TODO: Create profile before creating campaign
-        # campaign = create_campaign(
-        #     "0x8B39e23A121bAc9221698cD22ae7A6a80D64b1DC",
-        #     'This is the default campaign of the system.',
-        #     "2000-01-01 00:00:00",
-        #     "2099-01-01 00:00:00",
-        #     "Which is the most favorite coin?",
-        #     metadata.CTSI_LOCAL,
-        #     10
-        # )
-        #
-        # query = []
-        # for candidate in CANDIDATES:
-        #     query.append([
-        #         candidate['name'],
-        #         campaign['id'],
-        #         candidate['brief_introduction'] if 'brief_introduction' in candidate.keys() else '',
-        #         candidate['avatar']
-        #     ])
-        #
-        # add_candidates(query)
+        # Create profile
+        query_create_profile = 'INSERT INTO profiles ' \
+                               '(id, name, type, description, website, social_media, thumbnail, creator) values ' \
+                               '(1, "Super Devs", "org", ' \
+                               '"This profile belongs to someone, who can make the world to be a better place :D", ' \
+                               '"https://cartesi-voting.surge.sh/", null,' \
+                               '"https://beta.ctvnews.ca/content/dam/ctvnews/images/2019/11/18/1_4691731.png?cache_timestamp=1574134871525",' \
+                               '"0x1f5bc6c2a6259d00e5447cebb3b2bc0bb7b03996")'
+        cur.execute(query_create_profile)
+        query_create_manager = 'INSERT INTO profile_managers (profile_id, user) ' \
+                               'values (1, "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266")'
+        cur.execute(query_create_manager)
+        query_create_manager = 'INSERT INTO profile_managers (profile_id, user) ' \
+                               'values (1, "0x1f5bc6c2a6259d00e5447cebb3b2bc0bb7b03996")'
+        cur.execute(query_create_manager)
         conn.commit()
         conn.close()
+
+        # Create campaign
+        campaign = create_campaign(
+            "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
+            'This is the default campaign of the system.',
+            "2000-01-01 00:00:00",
+            "2099-01-01 00:00:00",
+            "Which is the most favorite coin?",
+            metadata.CTSI_LOCAL,
+            10,
+            1
+        )
+
+        query = []
+        for candidate in CANDIDATES:
+            query.append([
+                candidate['name'],
+                campaign['id'],
+                candidate['brief_introduction'] if 'brief_introduction' in candidate.keys() else '',
+                candidate['avatar']
+            ])
+
+        add_candidates(query)
     else:
         print("Metadata exists")

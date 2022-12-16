@@ -524,7 +524,7 @@ def get_campaign_detail(user, campaign_id):
 
 def all_campaigns(page, limit, condition, user, timestamp, my_campaign):
     time = datetime.datetime.fromtimestamp(timestamp)
-    return list_campaign(page, limit, condition, user, time, my_campaign)
+    return list_campaign(page, limit, condition, user, time, my_campaign, None)
 
 
 def to_hex(value):

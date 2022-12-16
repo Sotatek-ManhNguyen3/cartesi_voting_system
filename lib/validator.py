@@ -450,6 +450,20 @@ VALIDATE_RULES = {
             'type': 'int',
             'nullable': False
         }
+    },
+    actions.LIST_CAMPAIGN_OF_PROFILE: {
+        'page': {
+            'type': 'int',
+            'nullable': False
+        },
+        'limit': {
+            'type': 'int',
+            'nullable': False
+        },
+        'profile_id': {
+            'type': 'int',
+            'nullable': False
+        }
     }
 }
 
@@ -468,5 +482,6 @@ ALLOWED_ACTIONS_INSPECT = [
     actions.LIST_ROLE,
     actions.BACKUP,
     actions.LIST_PROFILE,
-    actions.DETAIL_PROFILE
+    actions.DETAIL_PROFILE,
+    actions.LIST_CAMPAIGN_OF_PROFILE,
 ]
