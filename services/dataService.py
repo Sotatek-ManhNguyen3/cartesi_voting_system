@@ -22,7 +22,7 @@ def create_profile_data(creator, name, description, website, social_media, thumb
 
 
 def update_profile_data(profile_id, name, description, website, social_media, thumbnail):
-    query = 'UPDATE profiles set name = ?, desciption = ?, website = ?, social_media = ?, thumbnail = ? where id = ?'
+    query = 'UPDATE profiles set name = ?, description = ?, website = ?, social_media = ?, thumbnail = ? where id = ?'
     return update_data(query, (name, description, website, social_media, thumbnail, profile_id))
 
 

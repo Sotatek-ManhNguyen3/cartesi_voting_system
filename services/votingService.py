@@ -55,6 +55,7 @@ def update_profile(editor, profile_id, payload, timestamp):
         payload['thumbnail']
     )
 
+    delete_profile_managers(profile_id)
     managers = [profile['creator'].lower()]
     for manager in payload['managers']:
         managers.append(manager.lower())
