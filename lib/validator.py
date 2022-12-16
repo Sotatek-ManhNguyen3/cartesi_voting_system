@@ -7,7 +7,7 @@ def validator(variable, rules):
     var_keys = variable.keys()
 
     for key in field_keys:
-        if key not in var_keys:
+        if key not in var_keys or variable[key] is None:
             if rules[key]['nullable']:
                 continue
             else:
