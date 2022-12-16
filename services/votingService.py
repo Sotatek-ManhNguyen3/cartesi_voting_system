@@ -121,6 +121,14 @@ def is_manager_of_profile(user, profile_id):
     return user in managers
 
 
+def list_profile_of_manager(manager):
+    profile_ids = list_profile_id_of_user_data(manager)
+
+    return {
+        'data': list_profile_from_ids(profile_ids)
+    }
+
+
 def can_deposit_token(token_address):
     token = get_token_can_deposit(token_address)
     return len(token) != 0

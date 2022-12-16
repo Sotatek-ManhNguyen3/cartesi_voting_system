@@ -6,7 +6,7 @@ from constants import metadata
 from constants.consts import STATUS_TOKEN
 from services.connection import *
 from services.sampleData import CANDIDATES
-from lib.helpers import get_now_str
+from lib.helpers import get_now_str, gen_question_mark_for_query_in
 from services.restoreDataService import start_backup
 
 
@@ -52,8 +52,8 @@ def delete_profile_data(profile_id):
 
 
 def list_profile_from_ids(ids):
-    query = 'SELECT * FROM profiles where id in ?'
-    return select_data(query, (ids,))
+    query = f'SELECT * FROM profiles where id in ({gen_question_mark_for_query_in(ids)})'
+    return select_data(query, tuple(ids))
 
 
 def list_profile_id_of_user_data(user):

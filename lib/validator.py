@@ -464,7 +464,8 @@ VALIDATE_RULES = {
             'type': 'int',
             'nullable': False
         }
-    }
+    },
+    actions.LIST_PROFILE_OF_CURRENT_USER: {}
 }
 
 ALLOWED_ACTIONS_INSPECT = [
@@ -484,4 +485,5 @@ ALLOWED_ACTIONS_INSPECT = [
     actions.LIST_PROFILE,
     actions.DETAIL_PROFILE,
     actions.LIST_CAMPAIGN_OF_PROFILE,
+    actions.LIST_PROFILE_OF_CURRENT_USER
 ]

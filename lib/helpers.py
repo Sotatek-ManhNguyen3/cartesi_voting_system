@@ -11,6 +11,10 @@ def get_now_str():
     return datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 
+def gen_question_mark_for_query_in(arr):
+    return ', '.join(['?' for i in range(len(arr))])
+
+
 # Get value of key in dict. Return None if that key doesn't exist
 def get_var(dict_var, key):
     return None if key not in dict_var.keys() else dict_var[key]
