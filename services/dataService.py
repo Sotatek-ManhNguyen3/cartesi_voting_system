@@ -412,7 +412,7 @@ def list_campaign(page, limit, campaign_status, user, time, my_campaign, profile
     elif campaign_status == 'FINISHED':
         additional_condition = connect_word + f'end_time <= "{str(time)}" '
     elif campaign_status == 'VOTED':
-        additional_condition = connect_word + f'where c.id in (select campaign_id from voting where user="{user}") '
+        additional_condition = connect_word + f'c.id in (select campaign_id from voting where user="{user}") '
 
     query = 'select c.*, stat3.name winning_candidate_name, \
                 stat3.votes votes_of_candidate,stat4.total_vote as total_vote, \
@@ -440,7 +440,6 @@ def list_campaign(page, limit, campaign_status, user, time, my_campaign, profile
                 ' + additional_condition + ' \
                 order by c.id DESC limit ? offset ?'
     query_total = 'select count(*) total from campaigns c ' + additional_condition
-    print(query)
     result = {
         "data": select_data(query, (limit, (page - 1) * limit)),
         "page": page,
