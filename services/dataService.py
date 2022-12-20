@@ -722,6 +722,7 @@ def create_base_tables():
                          "name TEXT NOT NULL," \
                          "type INTEGER NOT NULL," \
                          "creator TEXT," \
+                         "members INTEGER NOT NULL DEFAULT 0" \
                          "description TEXT NOT NULL," \
                          "website TEXT," \
                          "social_media TEXT," \

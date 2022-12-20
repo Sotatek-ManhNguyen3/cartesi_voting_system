@@ -525,10 +525,12 @@ def initialize_tables():
 
 def get_campaign_detail(user, campaign_id):
     voted = voted_candidate(user, campaign_id)
+    campaign = get_campaign(campaign_id)
     return {
         'candidates': list_all_candidates(campaign_id),
-        'campaign': get_campaign(campaign_id),
-        'voted': None if 'error' in voted.keys() else voted
+        'campaign': campaign,
+        'voted': None if 'error' in voted.keys() else voted,
+        'profile': get_detail_profile_data(campaign[0]['profile_id']) if len(campaign) == 1 else None
     }
 
 
