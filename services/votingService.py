@@ -347,6 +347,8 @@ def create_new_campaign(creator, payload, timestamp, token_address):
             if not is_manager_of_profile(creator, profile_id):
                 return {'error': 'You dont have permission to create campaign in this profile!'}
 
+        profile = get_detail_profile_data(profile_id)
+
         # Validate money
         create_fee = get_fee(token_address, None)
         have_enough_money = do_user_have_enough_money(creator, token_address, create_fee)
@@ -362,7 +364,8 @@ def create_new_campaign(creator, payload, timestamp, token_address):
             payload['name'],
             payload['accept_token'],
             payload['fee'],
-            profile_id
+            profile_id,
+            profile['type']
         )
 
         if 'error' in campaign.keys():
@@ -461,6 +464,10 @@ def edit_campaign(user_change, campaign_id, timestamp, payload):
         if not is_manager_of_profile(user_change, profile_id):
             return {'error': 'You dont have permission to create campaign in this profile!'}
 
+    profile = get_detail_profile_data(profile_id)
+    print(profile_id)
+    print(profile)
+
     update_campaign_info(
         campaign_id,
         payload['name'],
@@ -469,7 +476,8 @@ def edit_campaign(user_change, campaign_id, timestamp, payload):
         payload['end_time'],
         payload['accept_token'],
         payload['fee'],
-        profile_id
+        profile_id,
+        profile['type']
     )
     # Delete old candidates and recreate with new data
     delete_all_candidates_of_campaign(campaign_id)
@@ -490,17 +498,22 @@ def can_change_campaign_info(user_change, campaign_id, timestamp):
     if len(campaign) == 0:
         return {'error': 'Campaign does not exist!'}
 
-    if campaign[0]['creator'] != user_change:
+    campaign = campaign[0]
+
+    if campaign['creator'] != user_change:
         return {'error': 'You do not have the permission!'}
 
     # If the campaign is already started, then user can not change the campaign info
-    start_time = get_date_time_from_string(campaign[0]['start_time'])
+    start_time = get_date_time_from_string(campaign['start_time'])
     now = datetime.datetime.fromtimestamp(timestamp)
     if now.__gt__(start_time):
         return {'error': 'You can not change the on going campaign!'}
 
     # Validate if user_change is manager of linked profile
-    if campaign['profile_id'] not in list_profile_id_of_user_data(user_change):
+    if campaign['profile_type'] == consts.PROFILE_TYPE['USER']:
+        if campaign['creator'] != user_change:
+            return {'error': 'You do not have the permission!'}
+    elif campaign['profile_id'] not in list_profile_id_of_user_data(user_change):
         return {'error': 'You do not have the permission!'}
 
     return {'message': True}
@@ -536,7 +549,7 @@ def get_campaign_detail(user, campaign_id):
 
 def all_campaigns(page, limit, condition, user, timestamp, my_campaign):
     time = datetime.datetime.fromtimestamp(timestamp)
-    return list_campaign(page, limit, condition, user, time, my_campaign, None)
+    return list_campaign(page, limit, condition, user, time, my_campaign, None, consts.PROFILE_TYPE['USER'])
 
 
 def to_hex(value):

@@ -1,8 +1,7 @@
 import datetime
 import json
 
-import constants.consts
-from constants import metadata
+from constants import metadata, consts
 from constants.consts import STATUS_TOKEN
 from services.connection import *
 from services.sampleData import CANDIDATES
@@ -12,7 +11,7 @@ from services.restoreDataService import start_backup
 
 # ====================================== Profile ======================================
 def list_campaign_of_profile(profile_id, page, limit):
-    return list_campaign(page, limit, 'ALL', None, None, False, profile_id)
+    return list_campaign(page, limit, 'ALL', None, None, False, profile_id, consts.PROFILE_TYPE['ORG'])
 
 
 def create_profile_data(creator, name, description, website, social_media, thumbnail, profile_type):
@@ -92,18 +91,19 @@ def list_profile_of_user(user, page, limit, keyword):
 
 
 def list_profile(page, limit, keyword):
+    profile_type = consts.PROFILE_TYPE['ORG']
     if keyword is not None and keyword != "":
         query_data = 'SELECT * ' \
                      'FROM profiles ' \
-                     'WHERE name like "%?%" ' \
+                     f'WHERE type = "{profile_type}" name like "%?%" ' \
                      'ORDER BY id desc LIMIT ? OFFSET ?'
         var_query_data = (keyword, limit, (page - 1) * limit)
-        query_total = 'SELECT count(*) as total FROM profiles WHERE name like "%?%"'
+        query_total = f'SELECT count(*) as total FROM profiles WHERE type = "{profile_type}" name like "%?%"'
         var_query_total = (keyword,)
     else:
-        query_data = 'SELECT * FROM profiles ORDER BY id desc LIMIT ? OFFSET ?'
+        query_data = f'SELECT * FROM profiles WHERE type = "{profile_type}" ORDER BY id desc LIMIT ? OFFSET ?'
         var_query_data = (limit, (page - 1) * limit)
-        query_total = 'SELECT count(*) as total FROM profiles'
+        query_total = f'SELECT count(*) as total FROM profiles WHERE type = "{profile_type}"'
         var_query_total = ()
 
     return query_data_pagination(
@@ -117,7 +117,7 @@ def list_profile(page, limit, keyword):
 
 
 def get_profile_default_of_user_data(user):
-    query = f'SELECT * FROM profiles where creator = ? and type = {constants.consts.PROFILE_TYPE["USER"]}'
+    query = f'SELECT * FROM profiles where creator = ? and type = "{consts.PROFILE_TYPE["USER"]}"'
     data = select_data(query, (user,))
     return None if len(data) == 0 else data[0]
 
@@ -381,11 +381,16 @@ def delete_voting_of_candidate(candidate_id, campaign_id):
     return update_data(query, (candidate_id, campaign_id))
 
 
-def update_campaign_info(campaign_id, name, description, start_time, end_time, accept_token, fee, profile_id):
+def update_campaign_info(campaign_id, name, description,
+                         start_time, end_time, accept_token, fee, profile_id, profile_type):
     query = 'update campaigns ' \
-            'set name = ?, description = ?, start_time = ?, end_time = ?, accept_token = ?, fee = ?, profile_id = ? ' \
+            'set name = ?, description = ?, start_time = ?, end_time = ?, accept_token = ?, fee = ?, profile_id = ?, ' \
+            'profile_type = ? ' \
             'where id = ?'
-    return update_data(query, (name, description, start_time, end_time, accept_token, fee, profile_id, campaign_id))
+    return update_data(
+        query,
+        (name, description, start_time, end_time, accept_token, fee, profile_id, profile_type, campaign_id)
+    )
 
 
 def update_time_campaign(campaign_id, start_time, end_time):
@@ -393,28 +398,32 @@ def update_time_campaign(campaign_id, start_time, end_time):
     return update_data(query, (start_time, end_time, campaign_id))
 
 
-def list_campaign(page, limit, campaign_status, user, time, my_campaign, profile_id):
+def list_campaign(page, limit, campaign_status, user, time, my_campaign, profile_id, profile_type):
     additional_condition = ''
 
     # Query my campaign
     if my_campaign:
         additional_condition = f'where c.creator = "{user}" '
 
+    # Query profile type
+    connect_word = 'where ' if additional_condition == '' else 'and '
+    additional_condition += connect_word + f'c.profile_type = "{profile_type}" '
+
     # Query profile
     if profile_id is not None:
         connect_word = 'where ' if additional_condition == '' else 'and '
-        additional_condition = additional_condition + connect_word + f'c.profile_id = {profile_id} '
+        additional_condition += connect_word + f'c.profile_id = {profile_id} '
 
     # Query time of campaign
     connect_word = 'where ' if additional_condition == '' else 'and '
     if campaign_status == 'ON_GOING':
-        additional_condition = connect_word + f'start_time <= "{str(time)}" and end_time >= "{str(time)}" '
+        additional_condition += connect_word + f'start_time <= "{str(time)}" and end_time >= "{str(time)}" '
     elif campaign_status == 'FINISHED':
-        additional_condition = connect_word + f'end_time <= "{str(time)}" '
+        additional_condition += connect_word + f'end_time <= "{str(time)}" '
     elif campaign_status == 'VOTED':
-        additional_condition = connect_word + f'c.id in (select campaign_id from voting where user="{user}") '
+        additional_condition += connect_word + f'c.id in (select campaign_id from voting where user="{user}") '
 
-    query = 'select c.*, stat3.name winning_candidate_name, \
+    query = f'select c.*, stat3.name winning_candidate_name, \
                 stat3.votes votes_of_candidate,stat4.total_vote as total_vote, \
                 p.id as profile_id, p.name as profile_name, p.type as profile_type, \
                 p.creator as profile_creator, p.description as profile_description, \
@@ -437,9 +446,10 @@ def list_campaign(page, limit, campaign_status, user, time, my_campaign, profile
                 left join (select sum(votes) as total_vote, campaign_id from candidates group by campaign_id) stat4\
                     on stat4.campaign_id = c.id\
                 join profiles p on c.profile_id = p.id\
-                ' + additional_condition + ' \
+                {additional_condition} \
                 order by c.id DESC limit ? offset ?'
     query_total = 'select count(*) total from campaigns c ' + additional_condition
+    print(query)
     result = {
         "data": select_data(query, (limit, (page - 1) * limit)),
         "page": page,
@@ -459,10 +469,14 @@ def add_candidates(list_candidate):
     return insert_multiple_data(query, list_candidate)
 
 
-def create_campaign(creator, description, start_time, end_time, name, accept_token, fee, profile_id):
-    query = 'insert into campaigns (creator, name, description, start_time, end_time, accept_token, fee, profile_id) ' \
-            'values (?, ?, ?, ?, ?, ?, ?, ?);'
-    result = insert_data(query, (creator, name, description, start_time, end_time, accept_token, fee, profile_id))
+def create_campaign(creator, description, start_time, end_time, name, accept_token, fee, profile_id, profile_type):
+    query = 'insert into campaigns ' \
+            '(creator, name, description, start_time, end_time, accept_token, fee, profile_id, profile_type) ' \
+            'values (?, ?, ?, ?, ?, ?, ?, ?, ?);'
+    result = insert_data(
+        query,
+        (creator, name, description, start_time, end_time, accept_token, fee, profile_id, profile_type)
+    )
     if 'error' in result.keys():
         return result
     else:
@@ -601,6 +615,7 @@ def create_base_tables():
         query_campaign_table = "CREATE TABLE campaigns(" \
                                "id INTEGER PRIMARY KEY AUTOINCREMENT," \
                                "profile_id INTEGER NOT NULL," \
+                               "profile_type TEXT NOT NULL," \
                                "name TEXT NOT NULL," \
                                "creator TEXT NOT NULL," \
                                "description TEXT," \
@@ -722,7 +737,7 @@ def create_base_tables():
                          "name TEXT NOT NULL," \
                          "type INTEGER NOT NULL," \
                          "creator TEXT," \
-                         "members INTEGER NOT NULL DEFAULT 0" \
+                         "members INTEGER NOT NULL DEFAULT 0, " \
                          "description TEXT NOT NULL," \
                          "website TEXT," \
                          "social_media TEXT," \
@@ -770,7 +785,18 @@ def create_base_tables():
         conn.commit()
         conn.close()
 
-        # Create campaign
+        # Create profile default of user
+        create_profile_data(
+            "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
+            "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
+            'Default profile',
+            None,
+            None,
+            '',
+            consts.PROFILE_TYPE['USER']
+        )
+
+        # Create campaign of profile
         campaign = create_campaign(
             "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
             'This is the default campaign of the system.',
@@ -779,7 +805,32 @@ def create_base_tables():
             "Which is the most favorite coin?",
             metadata.CTSI_LOCAL,
             10,
-            1
+            1,
+            consts.PROFILE_TYPE['ORG']
+        )
+
+        query = []
+        for candidate in CANDIDATES:
+            query.append([
+                candidate['name'],
+                campaign['id'],
+                candidate['brief_introduction'] if 'brief_introduction' in candidate.keys() else '',
+                candidate['avatar']
+            ])
+
+        add_candidates(query)
+
+        # Create campaign of user
+        campaign = create_campaign(
+            "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
+            'This is the default campaign of the system.',
+            "2000-01-01 00:00:00",
+            "2099-01-01 00:00:00",
+            "Which is the most favorite coin?",
+            metadata.CTSI_LOCAL,
+            10,
+            2,
+            consts.PROFILE_TYPE['USER']
         )
 
         query = []
