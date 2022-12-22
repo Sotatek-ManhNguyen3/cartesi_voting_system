@@ -21,7 +21,6 @@ def format_action_histories(data):
         payload = json.loads(log['payload'])
         if log['action'] in action_contain_campaign:
             campaign_detail = get_campaign(payload['campaign']['id'])
-            print(campaign_detail)
 
             if len(campaign_detail) != 0:
                 payload['campaign'] = campaign_detail[0]

@@ -31,9 +31,6 @@ def start_backup():
                 prepared_data.append(row_data)
 
             gen_question_mark = ', '.join(['?' for i in range(len(columns))])
-            print(",".join(columns))
-            print(gen_question_mark)
-            print(prepared_data)
             query = f'INSERT INTO {table} ({",".join(columns)}) values ({gen_question_mark})'
             cur = conn.cursor()
             cur.executemany(query, prepared_data)

@@ -322,7 +322,6 @@ def update_used_amount_user(user, token, amount=metadata.DEFAULT_FEE_IN_SYSTEM):
 def get_total_vote_of_campaign(campaign_id):
     query = 'select sum(votes) as total_vote from candidates where campaign_id=? '
     result = select_data(query, (campaign_id,))
-    print(result)
     return result[0]['total_vote']
 
 
@@ -449,7 +448,6 @@ def list_campaign(page, limit, campaign_status, user, time, my_campaign, profile
                 {additional_condition} \
                 order by c.id DESC limit ? offset ?'
     query_total = 'select count(*) total from campaigns c ' + additional_condition
-    print(query)
     result = {
         "data": select_data(query, (limit, (page - 1) * limit)),
         "page": page,

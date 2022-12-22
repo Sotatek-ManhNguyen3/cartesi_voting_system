@@ -113,7 +113,10 @@ def get_profile_default_of_user(user):
         return profile
 
     create_profile_data(user, user, 'Default profile', None, None, '', consts.PROFILE_TYPE['USER'])
-    return get_profile_default_of_user_data(user)
+    profile = get_profile_default_of_user_data(user)
+    create_profile_managers(profile['id'], [user])
+
+    return profile
 
 
 def is_manager_of_profile(user, profile_id):
@@ -465,8 +468,6 @@ def edit_campaign(user_change, campaign_id, timestamp, payload):
             return {'error': 'You dont have permission to create campaign in this profile!'}
 
     profile = get_detail_profile_data(profile_id)
-    print(profile_id)
-    print(profile)
 
     update_campaign_info(
         campaign_id,

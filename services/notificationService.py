@@ -61,7 +61,6 @@ def get_notification(user, page, limit):
 
     result = []
     for notification in data['data']:
-        print(notification)
         payload = json.loads(notification['payload'])
         if 'token' in payload.keys():
             token_info = get_token(payload['token'], None)
