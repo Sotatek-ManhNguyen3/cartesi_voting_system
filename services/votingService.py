@@ -126,7 +126,7 @@ def is_manager_of_profile(user, profile_id):
 
 
 def list_profile_of_manager(manager):
-    profile_ids = list_profile_id_of_user_data(manager)
+    profile_ids = list_profile_id_of_user_data(manager, True)
 
     return {
         'data': list_profile_from_ids(profile_ids)

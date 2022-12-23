@@ -55,29 +55,39 @@ def list_profile_from_ids(ids):
     return select_data(query, tuple(ids))
 
 
-def list_profile_id_of_user_data(user):
-    query = f'SELECT * FROM profile_managers WHERE user = ?'
-    data = select_data(query, (user,))
-    return list(map(lambda row: row['profile_id'], data))
+def list_profile_id_of_user_data(user, only_org=False):
+    if not only_org:
+        query = f'SELECT * FROM profile_managers WHERE user = ?'
+        data = select_data(query, (user,))
+        return list(map(lambda row: row['profile_id'], data))
+    else:
+        org_type = consts.PROFILE_TYPE['ORG']
+        query = 'SELECT pm.profile_id FROM profile_managers pm JOIN profiles p ON pm.profile_id = p.id ' \
+                f'WHERE user = ? AND p.type ="{org_type}"'
+        data = select_data(query, (user,))
+        return list(map(lambda row: row['profile_id'], data))
 
 
 def list_profile_of_user(user, page, limit, keyword):
     if keyword is not None and keyword != "":
         query_data = 'SELECT p.* ' \
                      'FROM profile_managers pm INNER JOIN profiles p ON pm.user = ? AND p.id = pm.profile_id ' \
-                     'WHERE p.name like "%?%" ' \
+                     f'WHERE p.name like "%?%" AND p.type = {consts.PROFILE_TYPE["ORG"]} ' \
                      'ORDER BY p.id desc LIMIT ? OFFSET ?'
         var_query_data = (user, keyword, limit, (page - 1) * limit)
         query_total = 'SELECT count(*) as total ' \
                       'FROM profile_managers pm INNER JOIN profiles p ON pm.user = ? AND p.id = pm.profile_id ' \
-                      'WHERE p.name like "%?%" '
+                      f'WHERE p.name like "%?%" AND p.type = {consts.PROFILE_TYPE["ORG"]}'
         var_query_total = (user, keyword)
     else:
         query_data = 'SELECT p.* ' \
                      'FROM profile_managers pm JOIN profiles p ON pm.user = ? AND p.id = pm.profile_id ' \
+                     f'WHERE AND p.type = {consts.PROFILE_TYPE["ORG"]} ' \
                      'ORDER BY p.id desc LIMIT ? OFFSET ?'
         var_query_data = (user, limit, (page - 1) * limit)
-        query_total = 'SELECT count(*) as total FROM profile_managers WHERE user = ?'
+        query_total = 'SELECT count(*) as total ' \
+                      'FROM profile_managers pm INNER JOIN profiles p ON pm.user = ? AND p.id = pm.profile_id ' \
+                      f'WHERE p.type = {consts.PROFILE_TYPE["ORG"]}'
         var_query_total = (user,)
 
     return query_data_pagination(
