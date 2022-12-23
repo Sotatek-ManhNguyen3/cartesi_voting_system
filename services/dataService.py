@@ -25,7 +25,7 @@ def update_profile_data(profile_id, name, description, website, social_media, th
     return update_data(query, (name, description, website, social_media, thumbnail, profile_id))
 
 
-def create_profile_managers(profile_id, managers):
+def create_profile_managers(profile_id: int, managers: list):
     query = 'INSERT INTO profile_managers (profile_id, user) values (?, ?)'
     data = []
 
@@ -50,7 +50,32 @@ def delete_profile_data(profile_id):
     return update_data(query, (profile_id,))
 
 
-def list_profile_from_ids(ids):
+def create_user_profile(profile_id: int, users: list, time: str):
+    query = 'INSERT INTO user_profile (profile_id, user, created_at) values (?, ?, ?) ON CONFLICT DO NOTHING'
+    data = []
+
+    for user in users:
+        data.append([profile_id, user, time])
+
+    return insert_multiple_data(query, data)
+
+
+def delete_user_profile_by_user(user: str):
+    query = 'DELETE from user_profile where user = ?'
+    return update_data(query, (user,))
+
+
+def delete_user_profile_by_users(users: list):
+    query = f'DELETE FROM user_profile WHERE user IN ({gen_question_mark_for_query_in(users)})'
+    return update_data(query, tuple(users))
+
+
+def delete_user_profile_by_profile(profile_id: int):
+    query = 'DELETE from user_profile where profile_id = ?'
+    return update_data(query, (profile_id,))
+
+
+def list_profile_from_ids(ids: list):
     query = f'SELECT * FROM profiles where id in ({gen_question_mark_for_query_in(ids)})'
     return select_data(query, tuple(ids))
 
@@ -762,6 +787,20 @@ def create_base_tables():
                                  "UNIQUE(profile_id, user))"
         cur.execute(query_profile_managers)
 
+        # Table user_profile
+        query_user_profile = "CREATE TABLE user_profile(" \
+                             "user TEXT NOT NULL," \
+                             "profile_id INTEGER NOT NULL," \
+                             "created_at TEXT NOT NULL," \
+                             "UNIQUE(user, profile_id))"
+        cur.execute(query_user_profile)
+
+        # Set index for user and profile_id
+        query_index_user_profile_user = "CREATE INDEX index_user_profile_user on user_profile(user)"
+        cur.execute(query_index_user_profile_user)
+        query_index_user_profile_profile_id = "CREATE INDEX index_user_profile_profile_id on user_profile(profile_id)"
+        cur.execute(query_index_user_profile_profile_id)
+
         if start_backup():
             print('Have data backup')
             conn.commit()
@@ -792,6 +831,13 @@ def create_base_tables():
         cur.execute(query_create_manager)
         conn.commit()
         conn.close()
+
+        # Create followers for profiles
+        create_user_profile(
+            1,
+            ["0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266", "0x1f5bc6c2a6259d00e5447cebb3b2bc0bb7b03996"],
+            "2022-12-23 16:40:32"
+        )
 
         # Create profile default of user
         create_profile_data(

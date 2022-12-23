@@ -11,6 +11,12 @@ def get_now_str():
     return datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 
+# Convert timestamp to string
+# Example return: "2022-11-10 08:20:21"
+def get_date_time_from_timestamp(timestamp):
+    return str(datetime.datetime.fromtimestamp(timestamp))
+
+
 def gen_question_mark_for_query_in(arr):
     return ', '.join(['?' for i in range(len(arr))])
 

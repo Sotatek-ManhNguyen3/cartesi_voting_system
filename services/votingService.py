@@ -1,6 +1,6 @@
 from constants.historyActions import ACTIONS
 from services.dataService import *
-from lib.helpers import get_date_time_from_string, get_var, remove_duplicate
+from lib.helpers import get_date_time_from_string, get_var, remove_duplicate, get_date_time_from_timestamp
 from services.logService import log_action, format_action_histories
 from constants import metadata, consts
 import json
@@ -10,6 +10,7 @@ BASE_AMOUNT = 1000000000000000000
 
 # ============================================== Profile ==============================================
 def create_profile(user, payload, timestamp):
+    time = get_date_time_from_timestamp(timestamp)
     res = create_profile_data(
         user,
         payload['name'],
@@ -22,30 +23,34 @@ def create_profile(user, payload, timestamp):
 
     managers = [user.lower()]
     for manager in payload['managers']:
-        managers.append(manager.lower())
+        managers.append(manager.strip().lower())
 
     create_profile_managers(res['id'], remove_duplicate(managers))
+    create_user_profile(res['id'], remove_duplicate(managers), time)
 
     # Log action create profile
     log_action(user, ACTIONS['CREATE_PROFILE'], {
         'profile': get_detail_profile_data(res['id']),
-        'time': str(datetime.datetime.fromtimestamp(timestamp))
+        'time': time
     }, timestamp)
 
     return res
 
 
 def update_profile(editor, profile_id, payload, timestamp):
+    time = get_date_time_from_timestamp(timestamp)
     profile = get_detail_profile_data(profile_id)
 
     if profile is None:
         return {'error': 'Profile not found!'}
 
-    managers = list(map(lambda data: data['user'], get_managers_of_profile(profile_id)))
+    old_managers = list(map(lambda data: data['user'], get_managers_of_profile(profile_id)))
 
-    if editor not in managers:
+    # Validate if the editor is manager of the profile
+    if editor not in old_managers:
         return {'error': 'You can not edit this profile'}
 
+    # Update profile data
     update_profile_data(
         profile_id,
         payload['name'],
@@ -55,17 +60,25 @@ def update_profile(editor, profile_id, payload, timestamp):
         payload['thumbnail']
     )
 
-    delete_profile_managers(profile_id)
-    managers = [profile['creator'].lower()]
-    for manager in payload['managers']:
-        managers.append(manager.lower())
+    # Remove old new_managers from list follower of profile
+    delete_user_profile_by_users(old_managers)
 
-    create_profile_managers(profile['id'], remove_duplicate(managers))
+    # Remove old new_managers
+    delete_profile_managers(profile_id)
+    new_managers = [profile['creator'].lower()]
+    for manager in payload['managers']:
+        new_managers.append(manager.lower())
+
+    # Add new managers of profile
+    create_profile_managers(profile['id'], remove_duplicate(new_managers))
+
+    # Add new managers as followers of profile
+    create_user_profile(profile['id'], new_managers, time)
 
     # Log action update profile
     log_action(editor, ACTIONS['UPDATE_PROFILE'], {
         'profile': profile,
-        'time': str(datetime.datetime.fromtimestamp(timestamp))
+        'time': time
     }, timestamp)
 
     return {'message': 'Update profile info successfully'}
