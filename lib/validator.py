@@ -405,7 +405,7 @@ VALIDATE_RULES = {
             'nullable': True
         },
         'social_media': {
-            'type': 'str',
+            'type': 'dict',
             'nullable': True
         },
         'thumbnail': {
