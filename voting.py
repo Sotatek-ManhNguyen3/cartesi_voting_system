@@ -205,7 +205,7 @@ def action_proxy(data, is_inspect=False):
     elif payload['action'] == actions.LIST_PROFILE_OF_CURRENT_USER:
         result = list_profile_of_manager(user)
     else:
-        result = handle_admin_action(user, payload)
+        result = handle_admin_action(user, payload, timestamp)
 
     print(result)
     print("Result type: " + type(result).__name__)

@@ -5,7 +5,7 @@ from constants import metadata, consts
 from constants.consts import STATUS_TOKEN
 from services.connection import *
 from services.sampleData import CANDIDATES
-from lib.helpers import get_now_str, gen_question_mark_for_query_in
+from lib.helpers import gen_question_mark_for_query_in, get_date_time_from_timestamp
 from services.restoreDataService import start_backup
 
 
@@ -179,8 +179,8 @@ def backup_table(table):
     return select_data(query, ())
 
 
-def count_active_campaign_by_token(token):
-    now = get_now_str()
+def count_active_campaign_by_token(token, timestamp):
+    now = get_date_time_from_timestamp(timestamp)
     query = 'select count(*) as count from campaigns where accept_token = ? and end_time > ?'
     return select_data(query, (token, now))
 
@@ -523,11 +523,11 @@ def increase_votes(candidate_id, campaign_id):
     return update_data(query, (candidate_id, campaign_id))
 
 
-def vote_candidate(user, candidate_id, campaign_id, comment):
+def vote_candidate(user, candidate_id, campaign_id, comment, timestamp):
     query = 'insert into voting (candidate_id, campaign_id, user, voting_time, comment) values (?, ?, ?, ?, ?)'
     return update_data(
         query,
-        (candidate_id, campaign_id, user, datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), comment)
+        (candidate_id, campaign_id, user, get_date_time_from_timestamp(timestamp), comment)
     )
 
 

@@ -318,7 +318,7 @@ def vote(user, candidate_id, campaign_id, timestamp, comment=None):
                          f'You need at least {fee} unused coin!'}
 
     # Vote
-    result = vote_candidate(user, candidate_id, campaign_id, comment)
+    result = vote_candidate(user, candidate_id, campaign_id, comment, timestamp)
     if 'error' in result.keys():
         return result
 

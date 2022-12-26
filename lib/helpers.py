@@ -7,14 +7,15 @@ def get_date_time_from_string(time):
     return datetime.datetime(*[int(x) for x in time])
 
 
-def get_now_str():
-    return datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-
 # Convert timestamp to string
 # Example return: "2022-11-10 08:20:21"
 def get_date_time_from_timestamp(timestamp):
     return str(datetime.datetime.fromtimestamp(timestamp))
+
+
+# Format date time to YYYY-MM-DD HH:MM:SS
+def format_date_time(time: datetime):
+    return time.strftime('%Y-%m-%d %H:%M:%S')
 
 
 def gen_question_mark_for_query_in(arr):

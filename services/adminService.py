@@ -6,7 +6,7 @@ from constants.consts import STATUS_TOKEN
 import json
 
 
-def handle_admin_action(sender, payload):
+def handle_admin_action(sender, payload, timestamp):
     if not can_execute_action(payload['action'], sender):
         return {'error': 'You do not have permission!'}
 
@@ -54,7 +54,7 @@ def handle_admin_action(sender, payload):
             payload['can_create_campaign'] if 'can_create_campaign' in payload.keys() else None,
         )
     elif payload['action'] == actions.DELETE_TOKEN:
-        if not can_delete_token(payload['address'].lower()):
+        if not can_delete_token(payload['address'].lower(), timestamp):
             return {'error': 'There are on going campaigns using this token. '
                              'You can lock this token until all the campaigns using this token are ended!'}
         return change_status_token(payload['address'].lower(), STATUS_TOKEN['DISABLED'])
@@ -93,8 +93,8 @@ def does_token_exist(token):
     return len(token) != 0
 
 
-def can_delete_token(token):
-    count = count_active_campaign_by_token(token)[0]['count']
+def can_delete_token(token, timestamp):
+    count = count_active_campaign_by_token(token, timestamp)[0]['count']
     return count == 0
 
 
