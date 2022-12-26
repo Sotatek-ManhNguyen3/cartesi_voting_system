@@ -611,7 +611,11 @@ def get_campaign_detail(user, campaign_id):
 
 def all_campaigns(page, limit, condition, user, timestamp, my_campaign):
     time = datetime.datetime.fromtimestamp(timestamp)
-    return list_campaign(page, limit, condition, user, time, my_campaign, None, consts.PROFILE_TYPE['USER'])
+    return list_campaign(page, limit, condition, user, time, my_campaign, None, consts.PROFILE_TYPE['USER'], False)
+
+
+def followed_campaigns(user, page: int, limit: int, profile_id: int):
+    return list_campaign(page, limit, None, user, None, None, profile_id, consts.PROFILE_TYPE['ORG'], True)
 
 
 def to_hex(value):

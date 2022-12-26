@@ -11,7 +11,7 @@ from services.restoreDataService import start_backup
 
 # ====================================== Profile ======================================
 def list_campaign_of_profile(profile_id, page, limit):
-    return list_campaign(page, limit, 'ALL', None, None, False, profile_id, consts.PROFILE_TYPE['ORG'])
+    return list_campaign(page, limit, 'ALL', None, None, False, profile_id, consts.PROFILE_TYPE['ORG'], False)
 
 
 def create_profile_data(creator, name, description, website, social_media, thumbnail, profile_type):
@@ -452,7 +452,8 @@ def update_time_campaign(campaign_id, start_time, end_time):
     return update_data(query, (start_time, end_time, campaign_id))
 
 
-def list_campaign(page, limit, campaign_status, user, time, my_campaign, profile_id, profile_type):
+def list_campaign(page: int, limit: int, campaign_status,
+                  user, time, my_campaign, profile_id, profile_type, get_followed_profile: bool):
     additional_condition = ''
 
     # Query my campaign
@@ -476,6 +477,11 @@ def list_campaign(page, limit, campaign_status, user, time, my_campaign, profile
         additional_condition += connect_word + f'end_time <= "{str(time)}" '
     elif campaign_status == 'VOTED':
         additional_condition += connect_word + f'c.id in (select campaign_id from voting where user="{user}") '
+
+    # Query followed profile
+    connect_word = 'where ' if additional_condition == '' else 'and '
+    if get_followed_profile:
+        additional_condition += connect_word + f'p.id in (SELECT profile_id from user_profile where user="{user}") '
 
     query = f'select c.*, stat3.name winning_candidate_name, \
                 stat3.votes votes_of_candidate,stat4.total_vote as total_vote, \
@@ -502,7 +508,8 @@ def list_campaign(page, limit, campaign_status, user, time, my_campaign, profile
                 join profiles p on c.profile_id = p.id\
                 {additional_condition} \
                 order by c.id DESC limit ? offset ?'
-    query_total = 'select count(*) total from campaigns c ' + additional_condition
+    query_total = 'select count(*) total from campaigns c join profiles p on c.profile_id = p.id ' \
+                  + additional_condition
     result = {
         "data": select_data(query, (limit, (page - 1) * limit)),
         "page": page,

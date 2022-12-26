@@ -21,7 +21,7 @@ from services.votingService import vote, create_new_campaign, get_voted_candidat
     edit_campaign, delete_campaign, get_user_info, withdraw_money, save_executed_voucher_for_user, \
     get_executed_vouchers, can_deposit_token, list_token, list_voter, create_profile, update_profile, \
     delete_profile, list_profile_of_user, detail_profile, list_profile, list_campaign_of_profile, \
-    list_profile_of_manager, join_profile, leave_profile
+    list_profile_of_manager, join_profile, leave_profile, followed_campaigns
 from lib.validator import validator, VALIDATE_RULES, ALLOWED_ACTIONS_INSPECT
 from eth_abi import decode_abi, encode_abi
 from services.notificationService import save_notification, get_notification
@@ -208,6 +208,13 @@ def action_proxy(data, is_inspect=False):
         result = join_profile(user, payload['profile_id'], timestamp)
     elif payload['action'] == actions.LEAVE_PROFILE:
         result = leave_profile(user, payload['profile_id'], timestamp)
+    elif payload['action'] == actions.FOLLOWED_CAMPAIGN:
+        result = followed_campaigns(
+            user,
+            payload['page'],
+            payload['limit'],
+            None if 'profile_id' not in payload.keys() else payload['profile_id']
+        )
     else:
         result = handle_admin_action(user, payload, timestamp)
 
