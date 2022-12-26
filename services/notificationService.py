@@ -33,8 +33,7 @@ def save_notification(user, action, request, timestamp, response):
         campaign = get_campaign(request['id'])
         payload['campaign'] = None if len(campaign) == 0 else campaign[0]
     elif action == NOTIFICATION_ACTIONS['DELETE_CAMPAIGN']:
-        campaign = get_campaign(request['id'])
-        payload['campaign'] = None if len(campaign) == 0 else campaign[0]
+        payload['campaign'] = response['campaign']
     elif action == NOTIFICATION_ACTIONS['WITHDRAW']:
         payload['amount'] = int(request['amount']) / BASE_AMOUNT
         payload['token'] = request['token_address']
@@ -50,7 +49,13 @@ def save_notification(user, action, request, timestamp, response):
     elif action == NOTIFICATION_ACTIONS['UPDATE_PROFILE']:
         payload['profile'] = get_detail_profile_data(request['id'])
     elif action == NOTIFICATION_ACTIONS['DELETE_PROFILE']:
-        payload['profile'] = get_detail_profile_data(request['id'])
+        payload['profile'] = response['profile']
+    elif action == NOTIFICATION_ACTIONS['JOIN_PROFILE']:
+        if not is_error:
+            payload['profile'] = get_detail_profile_data(request['profile_id'])
+    elif action == NOTIFICATION_ACTIONS['LEAVE_PROFILE']:
+        if not is_error:
+            payload['profile'] = get_detail_profile_data(request['profile_id'])
 
     save_notification_data(user, action, json.dumps(payload), str(time), 'error' if is_error else 'success')
     remove_notification_data(user)

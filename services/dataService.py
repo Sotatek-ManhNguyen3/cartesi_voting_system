@@ -50,7 +50,7 @@ def delete_profile_data(profile_id):
     return update_data(query, (profile_id,))
 
 
-def create_user_profile(profile_id: int, users: list, time: str):
+def users_join_profile(profile_id: int, users: list, time: str):
     query = 'INSERT INTO user_profile (profile_id, user, created_at) values (?, ?, ?) ON CONFLICT DO NOTHING'
     data = []
 
@@ -58,6 +58,22 @@ def create_user_profile(profile_id: int, users: list, time: str):
         data.append([profile_id, user, time])
 
     return insert_multiple_data(query, data)
+
+
+def get_user_profile(user, profile_id):
+    query = 'SELECT * FROM user_profile WHERE user = ? AND profile_id = ?'
+    data = select_data(query, (user, profile_id))
+    return None if len(data) == 0 else data[0]
+
+
+def user_join_profile(user: str, profile_id: int, timestamp):
+    query = 'INSERT INTO user_profile (user, profile_id, created_at) VALUES (?, ?, ?)'
+    return update_data(query, (user, profile_id, get_date_time_from_timestamp(timestamp)))
+
+
+def user_leave_profile(user: str, profile_id: int):
+    query = 'DELETE FROM user_profile WHERE user = ? AND profile_id = ?'
+    return update_data(query, (user, profile_id))
 
 
 def delete_user_profile_by_user(user: str):
@@ -157,8 +173,12 @@ def get_profile_default_of_user_data(user):
     return None if len(data) == 0 else data[0]
 
 
-def get_detail_profile_data(profile_id):
+def get_detail_profile_data(profile_id: int, check_org: bool = False):
     query = 'SELECT * FROM profiles WHERE id = ?'
+
+    if check_org:
+        query += f' AND type = "{consts.PROFILE_TYPE["ORG"]}"'
+
     profile = select_data(query, (profile_id,))
     return profile[0] if len(profile) > 0 else None
 
@@ -833,11 +853,8 @@ def create_base_tables():
         conn.close()
 
         # Create followers for profiles
-        create_user_profile(
-            1,
-            ["0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266", "0x1f5bc6c2a6259d00e5447cebb3b2bc0bb7b03996"],
-            "2022-12-23 16:40:32"
-        )
+        users_join_profile(1, ["0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
+                               "0x1f5bc6c2a6259d00e5447cebb3b2bc0bb7b03996"], "2022-12-23 16:40:32")
 
         # Create profile default of user
         create_profile_data(

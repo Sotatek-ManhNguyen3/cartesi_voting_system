@@ -465,7 +465,19 @@ VALIDATE_RULES = {
             'nullable': False
         }
     },
-    actions.LIST_PROFILE_OF_CURRENT_USER: {}
+    actions.LIST_PROFILE_OF_CURRENT_USER: {},
+    actions.JOIN_PROFILE: {
+        'profile_id': {
+            'type': 'int',
+            'nullable': False
+        }
+    },
+    actions.LEAVE_PROFILE: {
+        'profile_id': {
+            'type': 'int',
+            'nullable': False
+        }
+    }
 }
 
 ALLOWED_ACTIONS_INSPECT = [

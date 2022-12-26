@@ -26,7 +26,7 @@ def create_profile(user, payload, timestamp):
         managers.append(manager.strip().lower())
 
     create_profile_managers(res['id'], remove_duplicate(managers))
-    create_user_profile(res['id'], remove_duplicate(managers), time)
+    users_join_profile(res['id'], remove_duplicate(managers), time)
 
     # Log action create profile
     log_action(user, ACTIONS['CREATE_PROFILE'], {
@@ -73,7 +73,7 @@ def update_profile(editor, profile_id, payload, timestamp):
     create_profile_managers(profile['id'], remove_duplicate(new_managers))
 
     # Add new managers as followers of profile
-    create_user_profile(profile['id'], new_managers, time)
+    users_join_profile(profile['id'], new_managers, time)
 
     # Log action update profile
     log_action(editor, ACTIONS['UPDATE_PROFILE'], {
@@ -106,7 +106,11 @@ def delete_profile(user, profile_id, timestamp):
         'time': str(datetime.datetime.fromtimestamp(timestamp))
     }, timestamp)
 
-    return delete_profile_data(profile_id)
+    delete_profile_data(profile_id)
+    return {
+        'message': f'Delete profile {profile["name"]} successfully!',
+        'profile': profile
+    }
 
 
 def detail_profile(profile_id):
@@ -144,6 +148,46 @@ def list_profile_of_manager(manager):
     return {
         'data': list_profile_from_ids(profile_ids)
     }
+
+
+def join_profile(user, profile_id, timestamp):
+    # Check if profile exists
+    profile = get_detail_profile_data(profile_id, True)
+
+    if profile is None:
+        return {'error': 'Invalid profile!'}
+
+    # Check if user already joined this profile
+    user_profile = get_user_profile(user, profile_id)
+
+    if user_profile is not None:
+        return {'error': 'You joined this profile before!'}
+
+    user_join_profile(user, profile_id, timestamp)
+    return {'message': f'You successfully joined profile {profile["name"]}'}
+
+
+def leave_profile(user, profile_id, timestamp):
+    # Check if profile exists
+    profile = get_detail_profile_data(profile_id, True)
+
+    if profile is None:
+        return {'error': 'Invalid profile!'}
+
+    # Check if user already joined this profile
+    user_profile = get_user_profile(user, profile_id)
+
+    if user_profile is None:
+        return {'error': 'You haven\'t join this profile yet!'}
+
+    # Check if that user is manager of profile
+    managers = list(map(lambda row: row['user'], get_managers_of_profile(profile_id)))
+    if user in managers:
+        return {'error': 'You are the manager of this profile. '
+                         'You can not unjoin this profile unless you are removed from list managers'}
+
+    user_leave_profile(user, profile_id)
+    return {'message': f'You left profile {profile["name"]}!'}
 
 
 def can_deposit_token(token_address):
@@ -435,9 +479,13 @@ def delete_campaign(campaign_id, user, timestamp):
         'time': str(datetime.datetime.fromtimestamp(timestamp))
     }, timestamp)
 
+    campaign = get_campaign(campaign_id)[0]
     delete_campaign_info(campaign_id)
 
-    return {'message': 'Delete campaign successfully'}
+    return {
+        'message': f'Delete campaign {campaign["name"]} successfully',
+        'campaign': campaign
+    }
 
 
 def can_use_token_to_vote(token):
