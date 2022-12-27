@@ -103,7 +103,7 @@ def delete_profile(user, profile_id, timestamp):
     # Log action delete profile
     log_action(user, ACTIONS['DELETE_PROFILE'], {
         'profile': profile,
-        'time': str(datetime.datetime.fromtimestamp(timestamp))
+        'time': get_date_time_from_timestamp(timestamp)
     }, timestamp)
 
     delete_profile_data(profile_id)
@@ -164,6 +164,13 @@ def join_profile(user, profile_id, timestamp):
         return {'error': 'You joined this profile before!'}
 
     user_join_profile(user, profile_id, timestamp)
+
+    # Save log action
+    log_action(user, ACTIONS['JOIN_PROFILE'], {
+        'profile': profile,
+        'time': get_date_time_from_timestamp(timestamp)
+    }, timestamp)
+
     return {'message': f'You successfully joined profile {profile["name"]}'}
 
 
@@ -187,6 +194,13 @@ def leave_profile(user, profile_id, timestamp):
                          'You can not unjoin this profile unless you are removed from list managers'}
 
     user_leave_profile(user, profile_id)
+
+    # Save log action
+    log_action(user, ACTIONS['LEAVE_PROFILE'], {
+        'profile': profile,
+        'time': get_date_time_from_timestamp(timestamp)
+    }, timestamp)
+
     return {'message': f'You left profile {profile["name"]}!'}
 
 
@@ -228,7 +242,7 @@ def save_executed_voucher_for_user(user, voucher_id, timestamp, amount, token):
         'voucher_id': voucher_id,
         'token': token,
         'amount': amount,
-        'time': str(datetime.datetime.fromtimestamp(timestamp))
+        'time': get_date_time_from_timestamp(timestamp)
     }, timestamp)
 
     return {'message': 'Save successfully'}
@@ -246,7 +260,7 @@ def withdraw_money(user, amount, timestamp, token):
     log_action(user, ACTIONS['WITHDRAW'], {
         'amount': amount,
         'token': token,
-        'time': str(datetime.datetime.fromtimestamp(timestamp))
+        'time': get_date_time_from_timestamp(timestamp)
     }, timestamp)
 
     return {'message': 'Withdraw money successfully!'}
@@ -312,7 +326,7 @@ def add_deposit_user(user, amount, token, timestamp):
     log_action(user, ACTIONS['DEPOSIT'], {
         'amount': amount,
         'token': token,
-        'time': str(datetime.datetime.fromtimestamp(timestamp))
+        'time': get_date_time_from_timestamp(timestamp)
     }, timestamp)
 
     return True
@@ -336,6 +350,12 @@ def vote(user, candidate_id, campaign_id, timestamp, comment=None):
         return {'error': 'You need to deposit to the system before voting!'}
 
     campaign = campaign[0]
+
+    # Validate whether user join profile or not
+    if campaign['profile_type'] == consts.PROFILE_TYPE['ORG'] \
+            and not does_user_belong_to_profile(user, campaign['profile_id']):
+        return {'error': 'You have to join profile before voting!'}
+
     token_address = campaign['accept_token']
     fee = campaign['fee']
 
@@ -379,12 +399,19 @@ def vote(user, candidate_id, campaign_id, timestamp, comment=None):
     log_action(user, ACTIONS['DECREASE_TOKEN'], {
         'amount': fee,
         'token': token_address,
-        'time': str(datetime.datetime.fromtimestamp(timestamp)),
+        'time': get_date_time_from_timestamp(timestamp),
         'reason': 'you voted for a candidate'
     }, timestamp)
 
     # Increase vote in candidates table
     return increase_votes(candidate_id, campaign_id)
+
+
+def does_user_belong_to_profile(user, profile_id):
+    if get_user_profile(user, profile_id) is None:
+        return False
+
+    return True
 
 
 # =========================================== Campaign ===========================================
@@ -445,7 +472,7 @@ def create_new_campaign(creator, payload, timestamp, token_address):
         # Log create campaign
         log_action(creator, ACTIONS['CREATE_CAMPAIGN'], {
             'campaign': campaign['campaign'],
-            'time': str(datetime.datetime.fromtimestamp(timestamp))
+            'time': get_date_time_from_timestamp(timestamp)
         }, timestamp)
 
         deduct_money_from_user(creator, token_address, create_fee)
@@ -454,7 +481,7 @@ def create_new_campaign(creator, payload, timestamp, token_address):
         log_action(creator, ACTIONS['DECREASE_TOKEN'], {
             'amount': create_fee,
             'token': token_address,
-            'time': str(datetime.datetime.fromtimestamp(timestamp)),
+            'time': get_date_time_from_timestamp(timestamp),
             'reason': 'create campaign'
         }, timestamp)
 
@@ -476,7 +503,7 @@ def delete_campaign(campaign_id, user, timestamp):
     # Log delete campaign
     log_action(user, ACTIONS['DELETE_CAMPAIGN'], {
         'campaign': get_campaign(campaign_id)[0],
-        'time': str(datetime.datetime.fromtimestamp(timestamp))
+        'time': get_date_time_from_timestamp(timestamp)
     }, timestamp)
 
     campaign = get_campaign(campaign_id)[0]
@@ -548,7 +575,7 @@ def edit_campaign(user_change, campaign_id, timestamp, payload):
     # Log edit campaign
     log_action(user_change, ACTIONS['EDIT_CAMPAIGN'], {
         'campaign': get_campaign(campaign_id)[0],
-        'time': str(datetime.datetime.fromtimestamp(timestamp))
+        'time': get_date_time_from_timestamp(timestamp)
     }, timestamp)
 
     return {'message': 'Update campaign successfully'}
