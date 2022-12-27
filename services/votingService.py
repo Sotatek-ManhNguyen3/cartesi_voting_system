@@ -113,13 +113,14 @@ def delete_profile(user, profile_id, timestamp):
     }
 
 
-def detail_profile(profile_id):
+def detail_profile(profile_id, user):
     profile = get_detail_profile_data(profile_id)
 
     if profile is None:
         return {'error': 'Profile not found!'}
 
     profile['managers'] = list(map(lambda data: data['user'], get_managers_of_profile(profile_id)))
+    profile['has_joined'] = get_user_profile(user, profile_id) is not None
     return profile
 
 

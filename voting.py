@@ -199,7 +199,7 @@ def action_proxy(data, is_inspect=False):
         else:
             result = list_profile(payload['page'], payload['limit'], payload['keyword'])
     elif payload['action'] == actions.DETAIL_PROFILE:
-        result = detail_profile(payload['id'])
+        result = detail_profile(payload['id'], user)
     elif payload['action'] == actions.LIST_CAMPAIGN_OF_PROFILE:
         result = list_campaign_of_profile(payload['profile_id'], payload['page'], payload['limit'])
     elif payload['action'] == actions.LIST_PROFILE_OF_CURRENT_USER:
