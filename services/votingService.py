@@ -21,12 +21,12 @@ def create_profile(user, payload, timestamp):
         consts.PROFILE_TYPE['ORG']
     )
 
-    managers = [user.lower()]
-    for manager in payload['managers']:
-        managers.append(manager.strip().lower())
-
-    create_profile_managers(res['id'], remove_duplicate(managers))
-    users_join_profile(res['id'], remove_duplicate(managers), time)
+    # Get managers from request
+    managers = get_managers_from_request(user, payload['managers'])
+    # Create relations between managers and profile
+    create_profile_managers(res['id'], managers)
+    # Create relations between user and profile
+    users_join_profile(res['id'], managers, time)
 
     # Log action create profile
     log_action(user, ACTIONS['CREATE_PROFILE'], {
@@ -61,16 +61,16 @@ def update_profile(editor, profile_id, payload, timestamp):
     )
 
     # Remove old new_managers from list follower of profile
-    delete_user_profile_by_users(old_managers)
+    delete_user_profile_by_users(old_managers, profile_id)
 
     # Remove old new_managers
     delete_profile_managers(profile_id)
-    new_managers = [profile['creator'].lower()]
-    for manager in payload['managers']:
-        new_managers.append(manager.lower())
+
+    # Get new managers
+    new_managers = get_managers_from_request(profile['creator'], payload['managers'])
 
     # Add new managers of profile
-    create_profile_managers(profile['id'], remove_duplicate(new_managers))
+    create_profile_managers(profile['id'], new_managers)
 
     # Add new managers as followers of profile
     users_join_profile(profile['id'], new_managers, time)
@@ -82,6 +82,15 @@ def update_profile(editor, profile_id, payload, timestamp):
     }, timestamp)
 
     return {'message': 'Update profile info successfully'}
+
+
+def get_managers_from_request(creator: str, managers: list):
+    result = [creator.lower()]
+    for manager in managers:
+        if manager.strip().lower() != '':
+            result.append(manager.strip().lower())
+
+    return remove_duplicate(result)
 
 
 def delete_profile(user, profile_id, timestamp):
@@ -106,7 +115,12 @@ def delete_profile(user, profile_id, timestamp):
         'time': get_date_time_from_timestamp(timestamp)
     }, timestamp)
 
+    # Delete profile data
     delete_profile_data(profile_id)
+    # Delete relations between managers and profile
+    delete_profile_managers(profile_id)
+    # Delete relations between users and profile
+    delete_user_profile_by_profile(profile_id)
     return {
         'message': f'Delete profile {profile["name"]} successfully!',
         'profile': profile

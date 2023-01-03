@@ -81,8 +81,9 @@ def delete_user_profile_by_user(user: str):
     return update_data(query, (user,))
 
 
-def delete_user_profile_by_users(users: list):
-    query = f'DELETE FROM user_profile WHERE user IN ({gen_question_mark_for_query_in(users)})'
+def delete_user_profile_by_users(users: list, profile_id: int):
+    query = f'DELETE FROM user_profile WHERE user IN ({gen_question_mark_for_query_in(users)}) AND profile_id = ?'
+    users.append(profile_id)
     return update_data(query, tuple(users))
 
 
