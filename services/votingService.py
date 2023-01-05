@@ -27,6 +27,7 @@ def create_profile(user, payload, timestamp):
     create_profile_managers(res['id'], managers)
     # Create relations between user and profile
     users_join_profile(res['id'], managers, time)
+    update_members_of_profile(res['id'], len(managers))
 
     # Log action create profile
     log_action(user, ACTIONS['CREATE_PROFILE'], {
@@ -74,6 +75,7 @@ def update_profile(editor, profile_id, payload, timestamp):
 
     # Add new managers as followers of profile
     users_join_profile(profile['id'], new_managers, time)
+    update_members_of_profile(profile['id'], total_members_of_profile(profile_id), True)
 
     # Log action update profile
     log_action(editor, ACTIONS['UPDATE_PROFILE'], {
@@ -179,6 +181,7 @@ def join_profile(user, profile_id, timestamp):
         return {'error': 'You joined this profile before!'}
 
     user_join_profile(user, profile_id, timestamp)
+    update_members_of_profile(profile_id, 1)
 
     # Save log action
     log_action(user, ACTIONS['JOIN_PROFILE'], {
@@ -209,6 +212,7 @@ def leave_profile(user, profile_id, timestamp):
                          'You can not unjoin this profile unless you are removed from list managers'}
 
     user_leave_profile(user, profile_id)
+    update_members_of_profile(profile_id, -1)
 
     # Save log action
     log_action(user, ACTIONS['LEAVE_PROFILE'], {

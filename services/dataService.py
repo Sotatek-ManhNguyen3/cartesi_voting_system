@@ -76,11 +76,6 @@ def user_leave_profile(user: str, profile_id: int):
     return update_data(query, (user, profile_id))
 
 
-def delete_user_profile_by_user(user: str):
-    query = 'DELETE from user_profile where user = ?'
-    return update_data(query, (user,))
-
-
 def delete_user_profile_by_users(users: list, profile_id: int):
     query = f'DELETE FROM user_profile WHERE user IN ({gen_question_mark_for_query_in(users)}) AND profile_id = ?'
     users.append(profile_id)
@@ -187,6 +182,20 @@ def get_detail_profile_data(profile_id: int, check_org: bool = False):
 def get_managers_of_profile(profile_id):
     query = 'SELECT * FROM profile_managers WHERE profile_id = ?'
     return select_data(query, (profile_id,))
+
+
+def update_members_of_profile(profile_id: int, number: int, should_replace=False):
+    if should_replace:
+        query = 'UPDATE profiles SET members = ? WHERE id = ?'
+        return update_data(query, (number, profile_id))
+    else:
+        query = 'UPDATE profiles SET members = members + ? WHERE id = ?'
+        return update_data(query, (number, profile_id))
+
+
+def total_members_of_profile(profile_id):
+    query = 'SELECT count(*) AS total FROM user_profile where profile_id = ?'
+    return select_data(query, (profile_id,))[0]['total']
 
 
 # ====================================== Campaign ======================================
@@ -844,12 +853,13 @@ def create_base_tables():
 
         # Create profile
         query_create_profile = 'INSERT INTO profiles ' \
-                               '(id, name, type, description, website, social_media, thumbnail, creator) values ' \
+                               '(id, name, type, description, website, social_media, thumbnail, creator, members) values ' \
                                '(1, "Super Devs", "org", ' \
                                '"This profile belongs to someone, who can make the world to be a better place :D", ' \
                                '"https://cartesi-voting.surge.sh/", null,' \
                                '"https://beta.ctvnews.ca/content/dam/ctvnews/images/2019/11/18/1_4691731.png?cache_timestamp=1574134871525",' \
-                               '"0x1f5bc6c2a6259d00e5447cebb3b2bc0bb7b03996")'
+                               '"0x1f5bc6c2a6259d00e5447cebb3b2bc0bb7b03996",' \
+                               '2)'
         cur.execute(query_create_profile)
         query_create_manager = 'INSERT INTO profile_managers (profile_id, user) ' \
                                'values (1, "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266")'
