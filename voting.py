@@ -23,6 +23,7 @@ from services.votingService import vote, create_new_campaign, get_voted_candidat
     delete_profile, list_profile_of_user, detail_profile, list_profile, list_campaign_of_profile, \
     list_profile_of_manager, join_profile, leave_profile, followed_campaigns
 from lib.validator import validator, VALIDATE_RULES, ALLOWED_ACTIONS_INSPECT
+from lib.helpers import get_var
 from eth_abi import decode_abi, encode_abi
 from services.notificationService import save_notification, get_notification
 from services.adminService import handle_admin_action
@@ -195,9 +196,9 @@ def action_proxy(data, is_inspect=False):
         result = delete_profile(user, payload['id'], timestamp)
     elif payload['action'] == actions.LIST_PROFILE:
         if payload['my_profile']:
-            result = list_profile_of_user(user, payload['page'], payload['limit'], payload['keyword'])
+            result = list_profile_of_user(user, payload['page'], payload['limit'], get_var(payload, 'keyword'))
         else:
-            result = list_profile(payload['page'], payload['limit'], payload['keyword'])
+            result = list_profile(payload['page'], payload['limit'], get_var(payload, 'keyword'))
     elif payload['action'] == actions.DETAIL_PROFILE:
         result = detail_profile(payload['id'], user)
     elif payload['action'] == actions.LIST_CAMPAIGN_OF_PROFILE:
@@ -213,7 +214,7 @@ def action_proxy(data, is_inspect=False):
             user,
             payload['page'],
             payload['limit'],
-            None if 'profile_id' not in payload.keys() else payload['profile_id']
+            get_var(payload, 'profile_id')
         )
     else:
         result = handle_admin_action(user, payload, timestamp)
