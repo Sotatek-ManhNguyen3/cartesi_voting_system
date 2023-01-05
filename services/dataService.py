@@ -142,16 +142,16 @@ def list_profile(page, limit, keyword):
     if keyword is not None and keyword != "":
         query_data = 'SELECT * ' \
                      'FROM profiles ' \
-                     f'WHERE type = "{profile_type}" name like "%?%" ' \
+                     f'WHERE type = ? AND name like ? ' \
                      'ORDER BY id desc LIMIT ? OFFSET ?'
-        var_query_data = (keyword, limit, (page - 1) * limit)
-        query_total = f'SELECT count(*) as total FROM profiles WHERE type = "{profile_type}" name like "%?%"'
-        var_query_total = (keyword,)
+        var_query_data = (profile_type, f'%{keyword}%', limit, (page - 1) * limit)
+        query_total = f'SELECT count(*) as total FROM profiles WHERE type = ? AND name like ?'
+        var_query_total = (profile_type, f'%{keyword}%')
     else:
-        query_data = f'SELECT * FROM profiles WHERE type = "{profile_type}" ORDER BY id desc LIMIT ? OFFSET ?'
-        var_query_data = (limit, (page - 1) * limit)
-        query_total = f'SELECT count(*) as total FROM profiles WHERE type = "{profile_type}"'
-        var_query_total = ()
+        query_data = f'SELECT * FROM profiles WHERE type = ? ORDER BY id desc LIMIT ? OFFSET ?'
+        var_query_data = (profile_type, limit, (page - 1) * limit)
+        query_total = f'SELECT count(*) as total FROM profiles WHERE type = ?'
+        var_query_total = (profile_type,)
 
     return query_data_pagination(
         query_data,
