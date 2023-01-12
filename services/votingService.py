@@ -572,7 +572,7 @@ def edit_campaign(user_change, campaign_id, timestamp, payload):
         profile_id = get_profile_default_of_user(user_change)['id']
     else:
         if not is_manager_of_profile(user_change, profile_id):
-            return {'error': 'You dont have permission to create campaign in this profile!'}
+            return {'error': 'You dont have permission to edit campaign in this profile!'}
 
     profile = get_detail_profile_data(profile_id)
 

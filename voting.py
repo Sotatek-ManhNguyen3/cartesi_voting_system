@@ -132,92 +132,93 @@ def action_proxy(data, is_inspect=False):
 
     print('Accept payload')
 
-    if payload['action'] == actions.CAMPAIGN_DETAIL:
-        result = get_campaign_detail(user, payload['campaign_id'])
-    elif payload['action'] == actions.VOTED_CANDIDATE:
-        result = get_voted_candidate(user, payload['campaign_id'])
-    elif payload['action'] == actions.VOTE:
-        result = vote(
-            user,
-            payload['candidate_id'],
-            payload['campaign_id'],
-            timestamp,
-            payload['comment'] if 'comment' in payload.keys() else None
-        )
-    elif payload['action'] == actions.CREATE_CAMPAIGN:
-        result = create_new_campaign(user, payload, timestamp, payload['token_address'])
-    elif payload['action'] == actions.LIST_CAMPAIGN:
-        result = all_campaigns(
-            payload['page'],
-            payload['limit'],
-            payload['type'],
-            user,
-            timestamp,
-            payload['my_campaign']
-        )
-    elif payload['action'] == actions.RESULT:
-        result = get_voting_result(user, payload['campaign_id'])
-    elif payload['action'] == actions.LIST_VOTER:
-        result = list_voter(payload['id'], payload['page'], payload['limit'])
-    elif payload['action'] == actions.CANDIDATE_DETAIL:
-        result = get_detail_candidate(payload['campaign_id'], payload['candidate_id'])
-    elif payload['action'] == actions.EDIT_CAMPAIGN:
-        result = edit_campaign(user, payload['id'], timestamp, payload)
-    elif payload['action'] == actions.DELETE_CAMPAIGN:
-        result = delete_campaign(payload['id'], user, timestamp)
-    elif payload['action'] == actions.USER_INFO:
-        result = get_user_info(user)
-    elif payload['action'] == actions.WITHDRAW:
-        amount = int(payload['amount'])
-        result = withdraw_money(user, amount / BASE_AMOUNT, timestamp, payload['token_address'])
-        if 'error' not in result.keys():
-            handle_withdraw_money(user, amount, payload['token_address'])
-    elif payload['action'] == actions.SAVE_EXECUTED_VOUCHER:
-        result = save_executed_voucher_for_user(
-            user,
-            payload['id'],
-            timestamp,
-            payload['amount'],
-            payload['token_address']
-        )
-    elif payload['action'] == actions.LIST_EXECUTED_VOUCHER:
-        result = get_executed_vouchers(user)
-    elif payload['action'] == actions.ACTION_HISTORY:
-        result = get_actions_histories(user, payload['page'], payload['limit'], payload['type'])
-    elif payload['action'] == actions.NOTIFICATION:
-        result = get_notification(user, payload['page'], payload['limit'])
-    elif payload['action'] == actions.LIST_TOKEN:
-        result = {'data': list_token()}
-    elif payload['action'] == actions.CREATE_PROFILE:
-        result = create_profile(user, payload, timestamp)
-    elif payload['action'] == actions.UPDATE_PROFILE:
-        result = update_profile(user, payload['id'], payload, timestamp)
-    elif payload['action'] == actions.DELETE_PROFILE:
-        result = delete_profile(user, payload['id'], timestamp)
-    elif payload['action'] == actions.LIST_PROFILE:
-        if payload['my_profile']:
-            result = list_profile_of_user(user, payload['page'], payload['limit'], get_var(payload, 'keyword'))
-        else:
-            result = list_profile(payload['page'], payload['limit'], get_var(payload, 'keyword'))
-    elif payload['action'] == actions.DETAIL_PROFILE:
-        result = detail_profile(payload['id'], user)
-    elif payload['action'] == actions.LIST_CAMPAIGN_OF_PROFILE:
-        result = list_campaign_of_profile(payload['profile_id'], payload['page'], payload['limit'])
-    elif payload['action'] == actions.LIST_PROFILE_OF_CURRENT_USER:
-        result = list_profile_of_manager(user)
-    elif payload['action'] == actions.JOIN_PROFILE:
-        result = join_profile(user, payload['profile_id'], timestamp)
-    elif payload['action'] == actions.LEAVE_PROFILE:
-        result = leave_profile(user, payload['profile_id'], timestamp)
-    elif payload['action'] == actions.FOLLOWED_CAMPAIGN:
-        result = followed_campaigns(
-            user,
-            payload['page'],
-            payload['limit'],
-            get_var(payload, 'profile_id')
-        )
-    else:
-        result = handle_admin_action(user, payload, timestamp)
+    match payload['action']:
+        case actions.CAMPAIGN_DETAIL:
+            result = get_campaign_detail(user, payload['campaign_id'])
+        case actions.VOTED_CANDIDATE:
+            result = get_voted_candidate(user, payload['campaign_id'])
+        case actions.VOTE:
+            result = vote(
+                user,
+                payload['candidate_id'],
+                payload['campaign_id'],
+                timestamp,
+                payload['comment'] if 'comment' in payload.keys() else None
+            )
+        case actions.CREATE_CAMPAIGN:
+            result = create_new_campaign(user, payload, timestamp, payload['token_address'])
+        case actions.LIST_CAMPAIGN:
+            result = all_campaigns(
+                payload['page'],
+                payload['limit'],
+                payload['type'],
+                user,
+                timestamp,
+                payload['my_campaign']
+            )
+        case actions.RESULT:
+            result = get_voting_result(user, payload['campaign_id'])
+        case actions.LIST_VOTER:
+            result = list_voter(payload['id'], payload['page'], payload['limit'])
+        case actions.CANDIDATE_DETAIL:
+            result = get_detail_candidate(payload['campaign_id'], payload['candidate_id'])
+        case actions.EDIT_CAMPAIGN:
+            result = edit_campaign(user, payload['id'], timestamp, payload)
+        case actions.DELETE_CAMPAIGN:
+            result = delete_campaign(payload['id'], user, timestamp)
+        case actions.USER_INFO:
+            result = get_user_info(user)
+        case actions.WITHDRAW:
+            amount = int(payload['amount'])
+            result = withdraw_money(user, amount / BASE_AMOUNT, timestamp, payload['token_address'])
+            if 'error' not in result.keys():
+                handle_withdraw_money(user, amount, payload['token_address'])
+        case actions.SAVE_EXECUTED_VOUCHER:
+            result = save_executed_voucher_for_user(
+                user,
+                payload['id'],
+                timestamp,
+                payload['amount'],
+                payload['token_address']
+            )
+        case actions.LIST_EXECUTED_VOUCHER:
+            result = get_executed_vouchers(user)
+        case actions.ACTION_HISTORY:
+            result = get_actions_histories(user, payload['page'], payload['limit'], payload['type'])
+        case actions.NOTIFICATION:
+            result = get_notification(user, payload['page'], payload['limit'])
+        case actions.LIST_TOKEN:
+            result = {'data': list_token()}
+        case actions.CREATE_PROFILE:
+            result = create_profile(user, payload, timestamp)
+        case actions.UPDATE_PROFILE:
+            result = update_profile(user, payload['id'], payload, timestamp)
+        case actions.DELETE_PROFILE:
+            result = delete_profile(user, payload['id'], timestamp)
+        case actions.LIST_PROFILE:
+            if payload['my_profile']:
+                result = list_profile_of_user(user, payload['page'], payload['limit'], get_var(payload, 'keyword'))
+            else:
+                result = list_profile(payload['page'], payload['limit'], get_var(payload, 'keyword'))
+        case actions.DETAIL_PROFILE:
+            result = detail_profile(payload['id'], user)
+        case actions.LIST_CAMPAIGN_OF_PROFILE:
+            result = list_campaign_of_profile(payload['profile_id'], payload['page'], payload['limit'])
+        case actions.LIST_PROFILE_OF_CURRENT_USER:
+            result = list_profile_of_manager(user)
+        case actions.JOIN_PROFILE:
+            result = join_profile(user, payload['profile_id'], timestamp)
+        case actions.LEAVE_PROFILE:
+            result = leave_profile(user, payload['profile_id'], timestamp)
+        case actions.FOLLOWED_CAMPAIGN:
+            result = followed_campaigns(
+                user,
+                payload['page'],
+                payload['limit'],
+                get_var(payload, 'profile_id')
+            )
+        case _:
+            result = handle_admin_action(user, payload, timestamp)
 
     print(result)
     print("Result type: " + type(result).__name__)
